@@ -100,3 +100,13 @@ body {
   font-weight: 700;
   letter-spacing: -0.02em;
 }
+
+/* Onboarding step transition */
+@keyframes step-enter {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-step-enter {
+  animation: step-enter 0.35s ease-out both;
+}

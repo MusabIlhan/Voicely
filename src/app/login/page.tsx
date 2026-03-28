@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 const BRIDGE_URL =
   process.env.NEXT_PUBLIC_BRIDGE_SERVER_URL || "http://localhost:8080";
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const justRegistered = searchParams.get("registered") === "1";
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,8 +37,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Store user info in localStorage
-      localStorage.setItem("voisli_user", JSON.stringify(data));
+      login(data);
       router.push("/");
     } catch {
       setError("Could not reach server");

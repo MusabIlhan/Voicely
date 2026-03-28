@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 const NAV_LINKS = [
   { href: "/", label: "Dashboard" },
@@ -12,6 +13,8 @@ const NAV_LINKS = [
 
 export function NavBar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAuthenticated, logout } = useAuth();
 
   return (
     <nav className="border-b border-card-border/50 bg-card/80 backdrop-blur-lg px-6 py-4 sticky top-0 z-50">
@@ -64,22 +67,39 @@ export function NavBar() {
             Demo
           </Link>
           <div className="ml-2 flex items-center gap-2 border-l border-card-border/50 pl-4">
-            <Link
-              href="/login"
-              className={`text-sm font-medium transition-colors ${
-                pathname === "/login"
-                  ? "text-foreground"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white transition-all hover:bg-accent-light hover:scale-105 active:scale-95"
-            >
-              Sign up
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <span className="text-sm text-muted">{user?.email}</span>
+                <button
+                  onClick={() => {
+                    logout();
+                    router.push("/");
+                  }}
+                  className="text-sm font-medium text-muted hover:text-foreground transition-colors"
+                >
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className={`text-sm font-medium transition-colors ${
+                    pathname === "/login"
+                      ? "text-foreground"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white transition-all hover:bg-accent-light hover:scale-105 active:scale-95"
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
