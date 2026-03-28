@@ -83,7 +83,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          toNumber: "+15551234567",
+          toNumber: "+46737869515",
           purpose:
             "Make a reservation for 2 people tonight at 7pm under the name Smith",
         }),
@@ -132,15 +132,11 @@ export default function Home() {
         />
         <StatusCard
           label="Twilio"
-          status={
-            !online ? "unknown" : twilioReady ? "online" : "offline"
-          }
+          status={!online ? "unknown" : twilioReady ? "online" : "offline"}
         />
         <StatusCard
           label="Gemini"
-          status={
-            !online ? "unknown" : geminiReady ? "online" : "offline"
-          }
+          status={!online ? "unknown" : geminiReady ? "online" : "offline"}
         />
       </section>
 
@@ -197,7 +193,10 @@ export default function Home() {
         ) : (
           <ul className="divide-y divide-card-border">
             {recentCalls.map((call) => (
-              <li key={call.id} className="flex items-center justify-between px-5 py-3">
+              <li
+                key={call.id}
+                className="flex items-center justify-between px-5 py-3"
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
@@ -239,9 +238,7 @@ export default function Home() {
       {/* Quick Setup */}
       {(!twilioReady || !geminiReady) && (
         <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
-          <h2 className="text-lg font-semibold text-foreground">
-            Quick Setup
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground">Quick Setup</h2>
           <p className="mt-1 text-sm text-muted">
             Configure these environment variables in your{" "}
             <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs text-accent-light">

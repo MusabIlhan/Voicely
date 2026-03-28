@@ -39,7 +39,7 @@ function isPlaceholder(value: string): boolean {
   return (
     !value ||
     value.startsWith("your_") ||
-    value === "+1234567890" ||
+    value === "+46737869515" ||
     value.startsWith("https://your-")
   );
 }
@@ -65,7 +65,7 @@ export const config: ServerConfig = {
   },
   nextPublicBridgeServerUrl: getEnv(
     "NEXT_PUBLIC_BRIDGE_SERVER_URL",
-    "http://localhost:8080"
+    "http://localhost:8080",
   ),
 };
 
@@ -88,7 +88,7 @@ export function validateConfig(): void {
 
   if (!status.twilio) {
     missing.push(
-      "Twilio (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)"
+      "Twilio (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)",
     );
   }
   if (!status.gemini) {
@@ -96,13 +96,13 @@ export function validateConfig(): void {
   }
   if (!status.googleCalendar) {
     missing.push(
-      "Google Calendar (GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY)"
+      "Google Calendar (GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY)",
     );
   }
 
   if (missing.length > 0) {
     console.warn(
-      `⚠ Missing or placeholder configuration for: ${missing.join(", ")}`
+      `⚠ Missing or placeholder configuration for: ${missing.join(", ")}`,
     );
     console.warn("  The bridge server will start, but calls will not work.");
     console.warn("  Copy .env.example to .env and fill in your API keys.");
@@ -110,7 +110,7 @@ export function validateConfig(): void {
 
   if (isPlaceholder(config.server.publicUrl)) {
     console.warn(
-      "⚠ PUBLIC_SERVER_URL is not set. Twilio webhooks will not work until this is configured (e.g., via ngrok)."
+      "⚠ PUBLIC_SERVER_URL is not set. Twilio webhooks will not work until this is configured (e.g., via ngrok).",
     );
   }
 }
