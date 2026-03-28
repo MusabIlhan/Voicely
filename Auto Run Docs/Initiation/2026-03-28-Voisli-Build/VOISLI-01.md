@@ -155,7 +155,7 @@ Phone Call ← Twilio ← WebSocket (mulaw 8kHz) ← Bridge Server ← Gemini Li
     - Log startup info: port, configured services, public URL
     - Handle graceful shutdown (close all active sessions on SIGINT/SIGTERM)
 
-- [ ] Build the Next.js dashboard with project branding and live connection status:
+- [x] Build the Next.js dashboard with project branding and live connection status:
   - Create `src/app/layout.tsx` with:
     - Clean, modern layout with dark theme (use Tailwind CSS — it comes with create-next-app)
     - App title "Voisli" in the metadata

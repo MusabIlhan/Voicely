@@ -1,65 +1,180 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import StatusCard from "@/components/StatusCard";
+import ActiveCalls from "@/components/ActiveCalls";
+
+interface BridgeStatus {
+  activeCalls: number;
+  uptime: number;
+  configuredServices: {
+    twilio: boolean;
+    gemini: boolean;
+  };
+}
+
+const BRIDGE_URL =
+  process.env.NEXT_PUBLIC_BRIDGE_SERVER_URL || "http://localhost:8080";
 
 export default function Home() {
+  const [status, setStatus] = useState<BridgeStatus | null>(null);
+  const [online, setOnline] = useState(false);
+
+  useEffect(() => {
+    async function fetchStatus() {
+      try {
+        const res = await fetch(`${BRIDGE_URL}/status`);
+        if (res.ok) {
+          setStatus(await res.json());
+          setOnline(true);
+        } else {
+          setOnline(false);
+        }
+      } catch {
+        setOnline(false);
+        setStatus(null);
+      }
+    }
+
+    fetchStatus();
+    const id = setInterval(fetchStatus, 5000);
+    return () => clearInterval(id);
+  }, []);
+
+  const twilioReady = status?.configuredServices.twilio ?? false;
+  const geminiReady = status?.configuredServices.gemini ?? false;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="mx-auto max-w-5xl px-6 py-10">
+      {/* Hero */}
+      <section className="mb-10">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+          Voisli
+        </h1>
+        <p className="mt-2 text-lg text-muted">Your AI Voice Assistant</p>
+      </section>
+
+      {/* Status Cards */}
+      <section className="mb-8 grid gap-4 sm:grid-cols-3">
+        <StatusCard
+          label="Bridge Server"
+          status={online ? "online" : "offline"}
+          detail={
+            online && status
+              ? `${Math.floor(status.uptime / 1000)}s uptime`
+              : undefined
+          }
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+        <StatusCard
+          label="Twilio"
+          status={
+            !online ? "unknown" : twilioReady ? "online" : "offline"
+          }
+        />
+        <StatusCard
+          label="Gemini"
+          status={
+            !online ? "unknown" : geminiReady ? "online" : "offline"
+          }
+        />
+      </section>
+
+      {/* Active Calls */}
+      <section className="mb-8">
+        <ActiveCalls calls={[]} />
+      </section>
+
+      {/* Quick Setup */}
+      {(!twilioReady || !geminiReady) && (
+        <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
+          <h2 className="text-lg font-semibold text-foreground">
+            Quick Setup
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            Configure these environment variables in your{" "}
+            <code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs text-accent-light">
+              .env
+            </code>{" "}
+            file to get started.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+          <ul className="mt-4 space-y-2 text-sm">
+            <EnvRow
+              ready={twilioReady}
+              name="TWILIO_ACCOUNT_SID"
+              description="Twilio Account SID"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <EnvRow
+              ready={twilioReady}
+              name="TWILIO_AUTH_TOKEN"
+              description="Twilio Auth Token"
+            />
+            <EnvRow
+              ready={twilioReady}
+              name="TWILIO_PHONE_NUMBER"
+              description="Twilio Phone Number"
+            />
+            <EnvRow
+              ready={geminiReady}
+              name="GEMINI_API_KEY"
+              description="Google Gemini API Key"
+            />
+          </ul>
+        </section>
+      )}
+
+      {/* How to Test */}
+      <section className="rounded-xl border border-card-border bg-card p-6">
+        <h2 className="text-lg font-semibold text-foreground">How to Test</h2>
+        <ol className="mt-4 space-y-3 text-sm text-muted">
+          <Step
+            n={1}
+            text="Configure your .env file with Twilio and Gemini API credentials"
+          />
+          <Step
+            n={2}
+            text="Start ngrok to expose the bridge server: ngrok http 8080"
+          />
+          <Step
+            n={3}
+            text="Set the ngrok URL as PUBLIC_SERVER_URL in .env and configure the Twilio webhook to point to it"
+          />
+          <Step
+            n={4}
+            text="Call your Twilio phone number — you'll be connected to the Gemini voice AI"
+          />
+        </ol>
+      </section>
     </div>
+  );
+}
+
+function EnvRow({
+  ready,
+  name,
+  description,
+}: {
+  ready: boolean;
+  name: string;
+  description: string;
+}) {
+  return (
+    <li className="flex items-center gap-2">
+      <span className={`text-base ${ready ? "text-success" : "text-danger"}`}>
+        {ready ? "\u2713" : "\u2717"}
+      </span>
+      <code className="font-mono text-xs text-accent-light">{name}</code>
+      <span className="text-muted/60">&mdash; {description}</span>
+    </li>
+  );
+}
+
+function Step({ n, text }: { n: number; text: string }) {
+  return (
+    <li className="flex gap-3">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-bold text-accent-light">
+        {n}
+      </span>
+      <span>{text}</span>
+    </li>
   );
 }
