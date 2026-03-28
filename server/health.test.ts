@@ -111,7 +111,7 @@ describe("runHealthCheck", () => {
       recall: true,
     });
     mockTwilioFetch.mockResolvedValue({ sid: "AC_test" });
-    mockGeminiGet.mockResolvedValue({ name: "gemini-2.5-flash" });
+    mockGeminiGet.mockResolvedValue({ name: "gemini-3.1-flash-lite-preview" });
     mockCalendarList.mockResolvedValue({ data: { items: [] } });
     mockFetch.mockResolvedValue({
       ok: true,
