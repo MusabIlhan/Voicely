@@ -49,6 +49,11 @@ const MCP_TOOLS = [
 ];
 
 export default function DemoPage() {
+  // Onboarding
+  const [onboardingOpen, setOnboardingOpen] = useState(true);
+  const [ngrokUrl, setNgrokUrl] = useState<string | null>(null);
+  const [calendarReady, setCalendarReady] = useState(false);
+
   // Server status
   const [serverOnline, setServerOnline] = useState(false);
   const [twilioReady, setTwilioReady] = useState(false);
@@ -94,7 +99,9 @@ export default function DemoPage() {
           setServerOnline(true);
           setTwilioReady(data.configuredServices?.twilio ?? false);
           setGeminiReady(data.configuredServices?.gemini ?? false);
+          setCalendarReady(data.configuredServices?.calendar ?? false);
           setTwilioNumber(data.twilioNumber ?? null);
+          setNgrokUrl(data.publicServerUrl ?? null);
         } else {
           setServerOnline(false);
         }
@@ -328,6 +335,166 @@ export default function DemoPage() {
           <StatusPill label="Twilio" ready={twilioReady} />
           <StatusPill label="Gemini" ready={geminiReady} />
         </div>
+      </section>
+
+      {/* ── Onboarding: Setup Guide ────────────────────────────────── */}
+      <section className="mb-8 glass-card rounded-xl animate-fade-in">
+        <button
+          onClick={() => setOnboardingOpen((v) => !v)}
+          className="flex w-full items-center justify-between px-5 py-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-accent-light">
+                <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 01-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 0 4.842a3.75 3.75 0 01-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 01-1.5 0v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584zM12 18a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                Getting Started
+              </h2>
+              <p className="text-sm text-muted">
+                Connect Claude to your phone in 4 steps
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <OnboardingProgress
+              steps={[serverOnline, twilioReady && !!ngrokUrl, geminiReady, serverOnline && twilioReady && geminiReady]}
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className={`h-5 w-5 text-muted transition-transform duration-200 ${onboardingOpen ? "rotate-180" : ""}`}
+            >
+              <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z" clipRule="evenodd" />
+            </svg>
+          </div>
+        </button>
+
+        {onboardingOpen && (
+          <div className="border-t border-card-border/50 px-5 py-5 space-y-1">
+            {/* Step 1: Start Services */}
+            <OnboardingStep
+              step={1}
+              title="Start the Bridge Server"
+              done={serverOnline}
+            >
+              <p className="text-sm text-muted mb-2">
+                The bridge server connects Claude, Twilio, and the dashboard together.
+              </p>
+              <div className="rounded-lg border border-card-border bg-background p-3">
+                <code className="font-mono text-xs text-accent-light">npm run dev</code>
+              </div>
+              <p className="mt-2 text-xs text-muted/60">
+                Starts both the Next.js dashboard (port 3001) and bridge server (port 8080)
+              </p>
+            </OnboardingStep>
+
+            {/* Step 2: Phone Line */}
+            <OnboardingStep
+              step={2}
+              title="Connect Your Phone Line"
+              done={twilioReady && !!ngrokUrl}
+            >
+              <p className="text-sm text-muted mb-3">
+                Set up Twilio so Claude can make and receive phone calls.
+              </p>
+              <div className="space-y-2">
+                <div className="rounded-lg border border-card-border bg-background p-3 space-y-1.5">
+                  <p className="text-xs font-medium text-foreground/80">1. Add Twilio credentials to <code className="text-accent-light">.env</code></p>
+                  <pre className="font-mono text-[11px] text-muted leading-relaxed">{`TWILIO_ACCOUNT_SID=your_sid
+TWILIO_AUTH_TOKEN=your_token
+TWILIO_PHONE_NUMBER=+1xxxxxxxxxx`}</pre>
+                </div>
+                <div className="rounded-lg border border-card-border bg-background p-3 space-y-1.5">
+                  <p className="text-xs font-medium text-foreground/80">2. Expose the server with ngrok</p>
+                  <code className="font-mono text-[11px] text-accent-light">ngrok http 8080</code>
+                  <p className="text-[11px] text-muted/60 mt-1">
+                    Copy the https URL and set it as <code className="text-accent-light">PUBLIC_SERVER_URL</code> in <code className="text-accent-light">.env</code>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-card-border bg-background p-3 space-y-1.5">
+                  <p className="text-xs font-medium text-foreground/80">3. Configure Twilio webhook</p>
+                  <p className="text-[11px] text-muted/60">
+                    In Twilio Console, set your phone number&apos;s Voice webhook to:
+                  </p>
+                  <code className="font-mono text-[11px] text-accent-light">
+                    {ngrokUrl ? `${ngrokUrl}/twiml` : "{PUBLIC_SERVER_URL}/twiml"}
+                  </code>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <StatusCheck label="Twilio credentials" ready={twilioReady} />
+                <StatusCheck label="Public URL" ready={!!ngrokUrl} />
+                {twilioNumber && (
+                  <span className="text-xs text-muted">
+                    Phone: <code className="text-accent-light">{twilioNumber}</code>
+                  </span>
+                )}
+              </div>
+            </OnboardingStep>
+
+            {/* Step 3: Connect Claude */}
+            <OnboardingStep
+              step={3}
+              title="Link Claude via MCP"
+              done={geminiReady}
+            >
+              <p className="text-sm text-muted mb-3">
+                Add the Voisli MCP server so Claude can make calls, join meetings, and manage your calendar.
+              </p>
+              <div className="rounded-lg border border-card-border bg-background p-3 space-y-1.5">
+                <p className="text-xs font-medium text-foreground/80">
+                  Add to your Claude Desktop or Claude Code config:
+                </p>
+                <pre className="font-mono text-[11px] text-muted leading-relaxed overflow-x-auto">{MCP_CONFIG}</pre>
+              </div>
+              <p className="mt-2 text-xs text-muted/60">
+                Once connected, Claude can use <span className="text-accent-light">{MCP_TOOLS.length} tools</span> including{" "}
+                <code className="text-accent-light">make_call</code>,{" "}
+                <code className="text-accent-light">join_meeting</code>, and{" "}
+                <code className="text-accent-light">check_calendar</code>
+              </p>
+              <div className="mt-3">
+                <StatusCheck label="AI model connected" ready={geminiReady} />
+              </div>
+            </OnboardingStep>
+
+            {/* Step 4: Ready */}
+            <OnboardingStep
+              step={4}
+              title="Test the Connection"
+              done={serverOnline && twilioReady && geminiReady}
+              isLast
+            >
+              <p className="text-sm text-muted mb-3">
+                Everything&apos;s wired up! Try it out:
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <div className="flex-1 min-w-[200px] rounded-lg border border-card-border bg-background p-3">
+                  <p className="text-xs font-medium text-foreground/80 mb-1">Option A: Call in</p>
+                  <p className="text-[11px] text-muted/60">
+                    Call <code className="text-accent-light">{twilioNumber ?? "your Twilio number"}</code> from your phone.
+                    The AI assistant will pick up.
+                  </p>
+                </div>
+                <div className="flex-1 min-w-[200px] rounded-lg border border-card-border bg-background p-3">
+                  <p className="text-xs font-medium text-foreground/80 mb-1">Option B: Ask Claude</p>
+                  <p className="text-[11px] text-muted/60">
+                    Tell Claude: &ldquo;Call +1234567890 and make a reservation for 2 tonight at 7pm&rdquo;
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <StatusCheck label="Bridge" ready={serverOnline} />
+                <StatusCheck label="Twilio" ready={twilioReady} />
+                <StatusCheck label="AI" ready={geminiReady} />
+              </div>
+            </OnboardingStep>
+          </div>
+        )}
       </section>
 
       {/* ── Demo Flow 1: Restaurant Reservation ──────────────────────── */}
@@ -728,6 +895,102 @@ function FlowStatusBadge({ status }: { status: DemoStatus }) {
       <span className={`h-1.5 w-1.5 rounded-full ${dots[status]}`} />
       {labels[status]}
     </span>
+  );
+}
+
+function OnboardingProgress({ steps }: { steps: boolean[] }) {
+  const done = steps.filter(Boolean).length;
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-xs text-muted tabular-nums">
+        {done}/{steps.length}
+      </span>
+      <div className="flex gap-0.5">
+        {steps.map((s, i) => (
+          <div
+            key={i}
+            className={`h-1.5 w-4 rounded-full transition-colors duration-300 ${
+              s ? "bg-success" : "bg-card-border"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OnboardingStep({
+  step,
+  title,
+  done,
+  isLast,
+  children,
+}: {
+  step: number;
+  title: string;
+  done: boolean;
+  isLast?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex gap-4">
+      {/* Timeline */}
+      <div className="flex flex-col items-center">
+        <div
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors duration-300 ${
+            done
+              ? "bg-success/20 text-success"
+              : "bg-card-border/50 text-muted"
+          }`}
+        >
+          {done ? (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            step
+          )}
+        </div>
+        {!isLast && (
+          <div
+            className={`w-px flex-1 my-1 transition-colors duration-300 ${
+              done ? "bg-success/30" : "bg-card-border/30"
+            }`}
+          />
+        )}
+      </div>
+      {/* Content */}
+      <div className={`pb-5 ${isLast ? "" : ""}`}>
+        <h3 className="text-sm font-semibold text-foreground mb-1.5">
+          {title}
+          {done && (
+            <span className="ml-2 text-[10px] font-medium text-success">
+              Connected
+            </span>
+          )}
+        </h3>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function StatusCheck({ label, ready }: { label: string; ready: boolean }) {
+  return (
+    <div className="flex items-center gap-1">
+      {ready ? (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-success">
+          <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z" clipRule="evenodd" />
+        </svg>
+      ) : (
+        <span className="h-3.5 w-3.5 flex items-center justify-center">
+          <span className="h-1.5 w-1.5 rounded-full bg-muted/40" />
+        </span>
+      )}
+      <span className={`text-[11px] ${ready ? "text-success/80" : "text-muted/50"}`}>
+        {label}
+      </span>
+    </div>
   );
 }
 
