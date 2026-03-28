@@ -12,7 +12,7 @@ import { config } from "@server/config";
 import type { GeminiConfig } from "../../shared/types";
 
 const DEFAULT_GEMINI_CONFIG: GeminiConfig = {
-  model: "gemini-live-2.5-flash-preview",
+  model: "gemini-3.1-flash-live-preview",
   systemInstruction:
     "You are Voisli, a helpful AI voice assistant. You help users make phone calls, reservations, and manage their schedule. Be conversational, concise, and friendly. Keep responses short since this is a voice conversation.",
   voice: "Aoede",
