@@ -173,7 +173,7 @@ Phone Call ← Twilio ← WebSocket (mulaw 8kHz) ← Bridge Server ← Gemini Li
   - Create `src/components/StatusCard.tsx` — reusable card component showing a service's status with icon and label
   - Create `src/components/ActiveCalls.tsx` — component listing active calls with duration timer
 
-- [ ] Create development startup scripts and verify everything compiles:
+- [x] Create development startup scripts and verify everything compiles:
   - Update `package.json` scripts to ensure `"dev"` runs both servers via concurrently with colored output labels: `[web]` for Next.js, `[bridge]` for the bridge server
   - Create a `.env` file by copying `.env.example` (with placeholder values so the servers start without crashing — config validation should warn but not exit if keys are missing, to allow the dashboard to render)
   - Run `npm run build` to verify the Next.js app compiles without TypeScript errors
