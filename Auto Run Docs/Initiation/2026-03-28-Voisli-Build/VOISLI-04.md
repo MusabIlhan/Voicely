@@ -20,7 +20,7 @@ This phase turns Voisli into an MCP (Model Context Protocol) server, allowing Cl
     - `callBridgeAPI(method, path, body?)` — generic helper for making requests to the bridge server
     - Handles connection errors gracefully (if bridge server isn't running, return clear error to the agent)
 
-- [ ] Implement MCP tools that expose Voisli's voice and meeting capabilities:
+- [x] Implement MCP tools that expose Voisli's voice and meeting capabilities:
   - Create `server/mcp/tools.ts` — register all MCP tools:
     - `make_call` — Initiate a phone call through Voisli
       - Input schema: `{ phone_number: string, purpose: string, instructions?: string }`
