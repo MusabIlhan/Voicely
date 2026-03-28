@@ -3,6 +3,9 @@ import {
   GoogleGenAI,
   Modality,
   Session,
+  StartSensitivity,
+  EndSensitivity,
+  ThinkingLevel,
   type LiveServerMessage,
   type LiveServerToolCall,
   type LiveConnectConfig,
@@ -70,13 +73,16 @@ export class GeminiLiveSession extends EventEmitter {
       systemInstruction: this.geminiConfig.systemInstruction,
       inputAudioTranscription: {},
       outputAudioTranscription: {},
-      thinkingConfig: { thinkingLevel: "minimal" },
-      automaticActivityDetection: {
-        startOfSpeechSensitivity: "START_OF_SPEECH_SENSITIVITY_HIGH",
-        endOfSpeechSensitivity: "END_OF_SPEECH_SENSITIVITY_HIGH",
-        silenceDurationMs: 500,
-        prefixPaddingMs: 100,
-      },
+      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+      // VAD tuning — SDK types may lag behind the API
+      ...(({
+        automaticActivityDetection: {
+          startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_HIGH,
+          endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_HIGH,
+          silenceDurationMs: 500,
+          prefixPaddingMs: 100,
+        },
+      }) as Record<string, unknown>),
     };
 
     if (this.geminiConfig.tools && this.geminiConfig.tools.length > 0) {
