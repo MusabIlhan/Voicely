@@ -11,6 +11,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:demo": "bash scripts/test-demo.sh",
     "mcp": "tsx server/mcp/index.ts"
   },
   "dependencies": {
