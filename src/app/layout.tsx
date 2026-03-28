@@ -63,6 +63,12 @@ export default function RootLayout({
               >
                 Calls
               </Link>
+              <Link
+                href="/meetings"
+                className="text-sm font-medium text-muted hover:text-foreground transition-colors"
+              >
+                Meetings
+              </Link>
             </div>
           </div>
         </nav>

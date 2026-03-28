@@ -32,6 +32,7 @@ export default function Home() {
   const [status, setStatus] = useState<BridgeStatus | null>(null);
   const [online, setOnline] = useState(false);
   const [recentCalls, setRecentCalls] = useState<RecentCall[]>([]);
+  const [activeMeetings, setActiveMeetings] = useState(0);
   const [callLoading, setCallLoading] = useState(false);
   const [callResult, setCallResult] = useState<{
     success: boolean;
@@ -66,11 +67,33 @@ export default function Home() {
       }
     }
 
+    async function fetchMeetings() {
+      try {
+        const res = await fetch(`${BRIDGE_URL}/meetings`);
+        if (res.ok) {
+          const data = await res.json();
+          const sessions = data.sessions ?? [];
+          setActiveMeetings(
+            sessions.filter(
+              (s: { status: string }) =>
+                s.status === "creating" ||
+                s.status === "joining" ||
+                s.status === "in_call"
+            ).length
+          );
+        }
+      } catch {
+        // Bridge not available
+      }
+    }
+
     fetchStatus();
     fetchCalls();
+    fetchMeetings();
     const id = setInterval(() => {
       fetchStatus();
       fetchCalls();
+      fetchMeetings();
     }, 5000);
     return () => clearInterval(id);
   }, [fetchCalls]);
@@ -147,6 +170,40 @@ export default function Home() {
       {/* Active Calls */}
       <section className="mb-8">
         <ActiveCalls calls={[]} />
+      </section>
+
+      {/* Active Meetings */}
+      <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-5 w-5 text-accent-light"
+              >
+                <path d="M4.5 4.5a3 3 0 00-3 3v9a3 3 0 003 3h8.25a3 3 0 003-3v-9a3 3 0 00-3-3H4.5zM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                Active Meetings
+              </h2>
+              <p className="text-sm text-muted">
+                {activeMeetings === 0
+                  ? "No bots in meetings"
+                  : `${activeMeetings} bot${activeMeetings !== 1 ? "s" : ""} in meetings`}
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/meetings"
+            className="text-sm text-accent-light hover:text-accent transition-colors"
+          >
+            View all
+          </Link>
+        </div>
       </section>
 
       {/* Make a Test Call */}

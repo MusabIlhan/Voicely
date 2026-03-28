@@ -55,7 +55,7 @@ export class MeetingAI {
 
     const contents: Array<{
       role: string;
-      parts: Array<{ text?: string; functionResponse?: { name: string; response: unknown } }>;
+      parts: Array<{ text?: string; functionResponse?: { name: string; response: Record<string, unknown> | undefined } }>;
     }> = [{ role: "user", parts: [{ text: question }] }];
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {

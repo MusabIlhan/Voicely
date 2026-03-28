@@ -77,7 +77,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
     - `join_meeting` — params: meeting_url (string), bot_name (string, optional). Description: "Send the Voisli AI assistant to join a Google Meet meeting"
   - Wire the new tool into `server/tools/executor.ts`
 
-- [ ] Build the meeting dashboard UI in Next.js:
+- [x] Build the meeting dashboard UI in Next.js:
   - Search existing components and pages before creating new files — extend existing navigation and patterns
   - Create `src/app/meetings/page.tsx` — meetings overview page:
     - "Join a Meeting" form with meeting URL input and submit button (calls `POST /meetings/join`)
