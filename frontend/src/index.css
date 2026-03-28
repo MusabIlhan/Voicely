@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 270 15% 98%;
+    --foreground: 260 25% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 260 25% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 260 25% 10%;
+
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 292 84% 61%;
+    --secondary-foreground: 260 25% 10%;
+
+    --muted: 260 12% 93%;
+    --muted-foreground: 260 10% 48%;
+
+    --accent: 330 85% 60%;
+    --accent-foreground: 260 25% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 260 12% 90%;
+    --input: 260 12% 90%;
+    --ring: 262 83% 58%;
+
+    --radius: 1rem;
+
+    --violet: 262 83% 58%;
+    --fuchsia: 292 84% 61%;
+    --rose: 330 85% 60%;
+
+    --glass-bg: 270 15% 98% / 0.7;
+    --glass-border: 260 12% 88%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 260 25% 10%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 260 12% 95%;
+    --sidebar-accent-foreground: 260 25% 10%;
+    --sidebar-border: 260 12% 90%;
+    --sidebar-ring: 262 83% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+  }
+  .font-body {
+    font-family: 'Inter', sans-serif;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(124, 58, 237, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124, 58, 237, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .glass-hover:hover {
+    border-color: rgba(124, 58, 237, 0.15);
+    box-shadow: 0 8px 40px rgba(124, 58, 237, 0.06);
+  }
+
+  .glow-violet {
+    box-shadow: 0 0 120px rgba(124, 58, 237, 0.12), 0 0 60px rgba(192, 38, 211, 0.06);
+  }
+  .glow-fuchsia {
+    box-shadow: 0 0 80px rgba(192, 38, 211, 0.1);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #7C3AED 0%, #C026D3 50%, #E11D80 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-border {
+    border-image: linear-gradient(135deg, #7C3AED, #C026D3) 1;
+  }
+
+  .gradient-bg {
+    background: linear-gradient(135deg, rgba(124,58,237,0.03) 0%, rgba(192,38,211,0.03) 50%, rgba(225,29,128,0.02) 100%);
+  }
+
+  .gradient-orb {
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.12) 0%, rgba(192, 38, 211, 0.04) 40%, transparent 70%);
+  }
+
+  .text-brand {
+    color: hsl(262, 83%, 58%);
+  }
+  .text-brand-secondary {
+    color: hsl(292, 84%, 50%);
+  }
+
+  .tracking-ultra {
+    letter-spacing: 0.2em;
+  }
+  .tracking-tight {
+    letter-spacing: -0.03em;
+  }
+
+  .elevation-1 {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+  }
+  .elevation-2 {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.02);
+  }
+  .elevation-3 {
+    box-shadow: 0 12px 48px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.03);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes breathing {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.01); }
+}
