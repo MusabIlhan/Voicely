@@ -137,7 +137,7 @@ describe("MeetingOrchestrator", () => {
       responses.push({ question, answer });
     });
 
-    gemini.emit("inputTranscription", "Hey Voisli, what's next?");
+    gemini.emit("inputTranscription", "Hey Yapper, what's next?");
     gemini.emit("outputTranscription", "We should review the roadmap.");
     gemini.emit("audio", Buffer.alloc(4800));
     gemini.emit("turnComplete");
@@ -152,21 +152,23 @@ describe("MeetingOrchestrator", () => {
       24000,
     );
     expect(responses[0]).toEqual({
-      question: "Hey Voisli, what's next?",
+      question: "Hey Yapper, what's next?",
       answer: "We should review the roadmap.",
     });
   });
 
   it("matches phonetic wake phrase variants", () => {
-    expect(normalizeWakeText("Hey, voice-lee!")).toBe("hey voice lee");
-    expect(findWakeMatch("Hey, voice lee").matchedAlias).toBe("voice lee");
-    expect(findWakeMatch("ok voicely").matchedAlias).toBe("voicely");
-    expect(findWakeMatch("yo voisley").matchedAlias).toBe("voisley");
+    expect(normalizeWakeText("Hey, yapper!")).toBe("hey yapper");
+    expect(findWakeMatch("Hey, yapper").matchedAlias).toBe("yapper");
+    expect(findWakeMatch("ok yaper").matchedAlias).toBe("yaper");
+    expect(findWakeMatch("yo yapr").matchedAlias).toBe("yapr");
+    expect(findWakeMatch("Hey, yappa.").matchedAlias).toBe("yappa");
+    expect(findWakeMatch("Hey assistant").matchedAlias).toBe("assistant");
     expect(findWakeMatch("voyage planning").matchedAlias).toBeNull();
   });
 
   it("responds when a phonetic wake phrase is heard", async () => {
-    gemini.emit("inputTranscription", "Hey, voice lee, can you hear me?");
+    gemini.emit("inputTranscription", "Hey, yaper, can you hear me?");
     gemini.emit("outputTranscription", "Yes, I can hear you.");
     gemini.emit("audio", Buffer.alloc(4800));
     gemini.emit("turnComplete");
@@ -183,7 +185,7 @@ describe("MeetingOrchestrator", () => {
   });
 
   it("allows a follow-up turn during the wake window", async () => {
-    gemini.emit("inputTranscription", "Hey Voisli, first question");
+    gemini.emit("inputTranscription", "Hey Yapper, first question");
     gemini.emit("outputTranscription", "First answer");
     gemini.emit("audio", Buffer.alloc(4800));
     gemini.emit("turnComplete");

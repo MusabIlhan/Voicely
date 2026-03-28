@@ -28,18 +28,18 @@ const BOT_AUDIO_SAMPLE_RATE = 24_000;
 const GENERATION_SUPPRESSION_MS = 15_000;
 const WAKE_PREFIXES = ["", "hey", "hi", "okay", "ok", "yo"] as const;
 const WAKE_ALIASES = [
-  "voisli",
-  "voisley",
-  "voicely",
-  "voice lee",
-  "voice li",
+  "yapper",
+  "yaper",
+  "yapr",
+  "yappa",
+  "assistant",
 ] as const;
 
 function meetingPrompt(): string {
   return [
     MEETING_ASSISTANT_PROMPT,
     "You are listening to live meeting audio.",
-    "Only respond when directly addressed with the wake name family 'Voisli', including close variants like 'Hey Voisli', 'Hi Voisli', 'Okay Voisli', 'Voicely', 'Voisley', 'Voice Lee', or 'Voice Li'.",
+    "Only respond when directly addressed with the wake name family 'Yapper', including close variants like 'Hey Yapper', 'Hi Yapper', 'Okay Yapper', and phonetic spellings such as 'Yaper', 'Yapr', or 'Yappa'. Also respond to the fallback wake phrase 'Hey Assistant' or 'Assistant'.",
     "If nobody addresses you directly, stay silent and do not use any tools.",
     "Keep spoken responses concise and useful.",
   ].join(" ");
@@ -49,6 +49,11 @@ interface WakeMatch {
   normalizedText: string;
   matchedAlias: string | null;
   matchedPattern: string | null;
+}
+
+interface WakeAliasVariant {
+  alias: string;
+  compact: string;
 }
 
 function normalizeWakeText(text: string): string {
@@ -63,6 +68,63 @@ function normalizeWakeText(text: string): string {
 
 function escapeRegex(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function compactWakeText(text: string): string {
+  return text.replace(/\s+/g, "");
+}
+
+function buildWakeAliasVariants(): WakeAliasVariant[] {
+  return WAKE_ALIASES.map((alias) => ({
+    alias,
+    compact: compactWakeText(alias),
+  }));
+}
+
+const WAKE_ALIAS_VARIANTS = buildWakeAliasVariants();
+
+function findCompactWakeTokenMatch(
+  normalizedText: string,
+): Pick<WakeMatch, "matchedAlias" | "matchedPattern"> {
+  const tokens = normalizedText.split(" ").filter(Boolean);
+
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    const previousToken = index > 0 ? tokens[index - 1] : "";
+
+    for (const variant of WAKE_ALIAS_VARIANTS) {
+      const exactCompactMatch = token === variant.compact;
+      const relaxedCompactMatch =
+        token.startsWith(variant.compact) &&
+        token.length <= variant.compact.length + 2;
+
+      if (!exactCompactMatch && !relaxedCompactMatch) {
+        continue;
+      }
+
+      if (
+        previousToken &&
+        WAKE_PREFIXES.some((prefix) => prefix && prefix === previousToken)
+      ) {
+        return {
+          matchedAlias: variant.alias,
+          matchedPattern: `${previousToken} ${variant.alias} (compact)`,
+        };
+      }
+
+      if (!previousToken || index === 0) {
+        return {
+          matchedAlias: variant.alias,
+          matchedPattern: `${variant.alias} (compact)`,
+        };
+      }
+    }
+  }
+
+  return {
+    matchedAlias: null,
+    matchedPattern: null,
+  };
 }
 
 function findWakeMatch(text: string): WakeMatch {
@@ -83,6 +145,15 @@ function findWakeMatch(text: string): WakeMatch {
         };
       }
     }
+  }
+
+  const compactMatch = findCompactWakeTokenMatch(normalizedText);
+  if (compactMatch.matchedAlias) {
+    return {
+      normalizedText,
+      matchedAlias: compactMatch.matchedAlias,
+      matchedPattern: compactMatch.matchedPattern,
+    };
   }
 
   return {
