@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -n web,bridge -c blue,magenta \"npm run dev:web\" \"npm run dev:server\"",
-    "dev:web": "next dev",
+    "dev:web": "next dev -p 3001",
     "dev:server": "tsx watch server/index.ts",
     "build": "next build",
     "start": "next start",
