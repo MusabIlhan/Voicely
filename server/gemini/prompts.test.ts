@@ -25,17 +25,22 @@ describe("system prompts", () => {
 describe("getSystemPrompt", () => {
   it("should return inbound prompt for inbound context", () => {
     const prompt = getSystemPrompt("inbound");
-    expect(prompt).toBe(INBOUND_ASSISTANT_PROMPT);
+    expect(prompt).toContain(INBOUND_ASSISTANT_PROMPT);
   });
 
   it("should return reservation prompt for outbound_reservation context", () => {
     const prompt = getSystemPrompt("outbound_reservation");
-    expect(prompt).toBe(OUTBOUND_RESERVATION_PROMPT);
+    expect(prompt).toContain(OUTBOUND_RESERVATION_PROMPT);
   });
 
   it("should return generic outbound prompt for outbound_generic context", () => {
     const prompt = getSystemPrompt("outbound_generic");
-    expect(prompt).toBe(OUTBOUND_GENERIC_PROMPT);
+    expect(prompt).toContain(OUTBOUND_GENERIC_PROMPT);
+  });
+
+  it("should include knowledge base in prompts", () => {
+    const prompt = getSystemPrompt("inbound");
+    expect(prompt).toContain("Knowledge Base");
   });
 
   it("should append purpose when provided", () => {

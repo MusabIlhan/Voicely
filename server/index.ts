@@ -11,6 +11,7 @@ import type { BridgeServerStatus } from "../shared/types";
 import { sseHandler } from "./events";
 import { runHealthCheck } from "./health";
 import authRoutes from "./auth";
+import { loadKnowledgeBase, saveKnowledgeBase, clearKnowledgeCache, type KnowledgeBase } from "./knowledge/index";
 
 const startTime = Date.now();
 
@@ -186,6 +187,36 @@ app.get("/meetings/:botId/transcript", (req, res) => {
   }
   const transcript = meetingOrchestrator.getTranscript(req.params.botId);
   res.json({ botId: req.params.botId, transcript });
+});
+
+// Knowledge base endpoints
+
+// GET /knowledge — return the current knowledge base
+app.get("/knowledge", (_req, res) => {
+  try {
+    clearKnowledgeCache();
+    const kb = loadKnowledgeBase();
+    res.json(kb);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
+  }
+});
+
+// PUT /knowledge — replace the entire knowledge base
+app.put("/knowledge", (req, res) => {
+  const kb = req.body as KnowledgeBase;
+  if (!kb || !kb.company || !kb.products) {
+    res.status(400).json({ error: "Invalid knowledge base format. Requires company and products." });
+    return;
+  }
+  try {
+    saveKnowledgeBase(kb);
+    res.json({ success: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
+  }
 });
 
 // Global error handler middleware — catches unhandled errors in route handlers

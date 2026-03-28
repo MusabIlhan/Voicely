@@ -1,0 +1,79 @@
+{
+  "company": {
+    "name": "Voisli Demo Co.",
+    "industry": "AI-powered voice solutions",
+    "description": "We provide AI voice assistant technology for businesses to automate phone calls, meetings, and scheduling.",
+    "founded": "2024",
+    "website": "https://voisli.com"
+  },
+  "products": [
+    {
+      "name": "Voisli Voice Agent",
+      "description": "AI-powered inbound call handler that answers customer calls, takes messages, and routes inquiries.",
+      "price": "$49/month",
+      "category": "core",
+      "bestSeller": true,
+      "features": ["24/7 availability", "Natural conversation", "Call routing", "Message taking", "Calendar integration"]
+    },
+    {
+      "name": "Voisli Outbound Caller",
+      "description": "Automated outbound calling for reservations, appointments, and follow-ups.",
+      "price": "$79/month",
+      "category": "core",
+      "bestSeller": false,
+      "features": ["Restaurant reservations", "Appointment booking", "Follow-up calls", "Confirmation calls"]
+    },
+    {
+      "name": "Voisli Meeting Bot",
+      "description": "AI meeting assistant that joins video calls, transcribes conversations, and generates summaries.",
+      "price": "$39/month",
+      "category": "meetings",
+      "bestSeller": false,
+      "features": ["Live transcription", "Meeting summaries", "Action item extraction", "Zoom/Meet/Teams support"]
+    },
+    {
+      "name": "Voisli Enterprise Suite",
+      "description": "Full platform access with custom integrations, dedicated support, and unlimited usage.",
+      "price": "$199/month",
+      "category": "enterprise",
+      "bestSeller": false,
+      "features": ["All products included", "Custom integrations", "Priority support", "SLA guarantees", "SSO/SAML"]
+    }
+  ],
+  "faq": [
+    {
+      "question": "What is our most selling product?",
+      "answer": "Our best-selling product is the Voisli Voice Agent at $49/month. It's our core inbound call handling solution."
+    },
+    {
+      "question": "What hours are we available?",
+      "answer": "Our AI assistants are available 24/7. Human support is available Monday through Friday, 9 AM to 6 PM Eastern."
+    },
+    {
+      "question": "Do we offer a free trial?",
+      "answer": "Yes, we offer a 14-day free trial on all plans. No credit card required."
+    },
+    {
+      "question": "What integrations do we support?",
+      "answer": "We integrate with Twilio, Google Calendar, Google Meet, Zoom, Microsoft Teams, and any MCP-compatible AI agent like Claude."
+    },
+    {
+      "question": "How does billing work?",
+      "answer": "All plans are billed monthly. Enterprise plans can be billed annually with a 15% discount."
+    },
+    {
+      "question": "Can the AI handle multiple languages?",
+      "answer": "Currently the voice assistant supports English. Multi-language support is on our roadmap for Q3 2026."
+    }
+  ],
+  "policies": {
+    "refund": "Full refund within 30 days of purchase, no questions asked.",
+    "support": "Email support at support@voisli.com. Enterprise customers get dedicated Slack channel.",
+    "uptime": "We guarantee 99.9% uptime for all paid plans."
+  },
+  "team": {
+    "supportEmail": "support@voisli.com",
+    "salesEmail": "sales@voisli.com",
+    "phone": "+1-555-VOISLI"
+  }
+}
