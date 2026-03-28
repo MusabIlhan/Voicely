@@ -10,16 +10,16 @@ interface StatusCardProps {
 
 export default function StatusCard({ label, status, detail, error, latencyMs }: StatusCardProps) {
   const statusConfig = {
-    online: { bg: "bg-success/10 text-success", dot: "bg-success animate-pulse-dot", text: "Online" },
-    offline: { bg: "bg-danger/10 text-danger", dot: "bg-danger", text: "Offline" },
-    unknown: { bg: "bg-muted/10 text-muted", dot: "bg-muted", text: "Unknown" },
-    unconfigured: { bg: "bg-warning/10 text-warning", dot: "bg-warning", text: "Not Configured" },
+    online: { bg: "bg-success/8 text-success", dot: "bg-success animate-pulse-dot", text: "Online" },
+    offline: { bg: "bg-danger/8 text-danger", dot: "bg-danger", text: "Offline" },
+    unknown: { bg: "bg-muted/8 text-muted", dot: "bg-muted", text: "Unknown" },
+    unconfigured: { bg: "bg-warning/8 text-warning", dot: "bg-warning", text: "Not Configured" },
   };
 
   const cfg = statusConfig[status];
 
   return (
-    <div className="glass-card rounded-xl p-5 animate-fade-in">
+    <div className="glass-card rounded-2xl p-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-muted">{label}</span>
         <span
@@ -35,11 +35,11 @@ export default function StatusCard({ label, status, detail, error, latencyMs }: 
         </p>
       )}
       {latencyMs !== undefined && status === "online" && (
-        <p className="mt-1 text-xs text-muted/60">{latencyMs}ms latency</p>
+        <p className="mt-1 text-xs text-muted/70">{latencyMs}ms latency</p>
       )}
       {error && (
-        <div className="mt-2 rounded-lg bg-danger/5 border border-danger/20 px-3 py-2">
-          <p className="text-xs text-danger/90 break-words">{error}</p>
+        <div className="mt-2 rounded-xl bg-danger/5 border border-danger/15 px-3 py-2">
+          <p className="text-xs text-danger break-words">{error}</p>
         </div>
       )}
     </div>

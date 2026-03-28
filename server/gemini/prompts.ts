@@ -3,6 +3,8 @@
  * The orchestrator selects the appropriate prompt based on call direction and purpose.
  */
 
+import { formatKnowledgeForPrompt } from "../knowledge/index";
+
 /** For when a user calls Voisli directly. */
 export const INBOUND_ASSISTANT_PROMPT =
   "You are Voisli, a helpful AI voice assistant. You can check the user's calendar, make reservations, and place calls on their behalf. Be conversational and concise.";
@@ -29,6 +31,7 @@ export type CallContext = "inbound" | "outbound_reservation" | "outbound_generic
 /**
  * Returns the system instruction for a given call context, optionally
  * appending a purpose string so Gemini knows why it's calling.
+ * The knowledge base is always injected so the AI can answer business questions.
  */
 export function getSystemPrompt(context: CallContext, purpose?: string): string {
   let base: string;
@@ -49,7 +52,16 @@ export function getSystemPrompt(context: CallContext, purpose?: string): string 
   }
 
   if (purpose) {
-    return `${base}\n\nCall purpose: ${purpose}`;
+    base += `\n\nCall purpose: ${purpose}`;
   }
+
+  // Inject knowledge base so the AI can answer business questions
+  try {
+    const knowledge = formatKnowledgeForPrompt();
+    base += `\n\n--- Knowledge Base ---\nUse the following information to answer questions about the company, products, pricing, policies, and FAQs. If asked something not covered here, say you'll need to check and get back to them.\n\n${knowledge}`;
+  } catch {
+    // Knowledge base not available — continue without it
+  }
+
   return base;
 }

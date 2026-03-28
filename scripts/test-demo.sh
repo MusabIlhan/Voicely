@@ -23,7 +23,7 @@ FAIL=0
 WARN=0
 
 BRIDGE_URL="${NEXT_PUBLIC_BRIDGE_SERVER_URL:-http://localhost:8080}"
-DASHBOARD_URL="http://localhost:3000"
+DASHBOARD_URL="http://localhost:3001"
 
 # ---------------------------------------------------------------------------
 # Helpers

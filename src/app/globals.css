@@ -1,27 +1,110 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #0f172a;
-  --color-foreground: #e2e8f0;
-  --color-card: #1e293b;
-  --color-card-border: #334155;
-  --color-accent: #7c3aed;
-  --color-accent-light: #8b5cf6;
-  --color-success: #22c55e;
-  --color-danger: #ef4444;
-  --color-muted: #94a3b8;
-  --color-warning: #eab308;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* === NexGen Light Mode Palette === */
+  --color-background: #F8FAFC;
+  --color-foreground: #1E293B;
+  --color-card: #FFFFFF;
+  --color-card-border: #E2E8F0;
+  --color-accent: #0EA5E9;
+  --color-accent-light: #38BDF8;
+  --color-success: #10B981;
+  --color-danger: #EF4444;
+  --color-muted: #64748B;
+  --color-warning: #F59E0B;
+
+  /* NexGen surface tokens */
+  --color-surface: rgba(255, 255, 255, 0.8);
+  --color-surface-hover: rgba(14, 165, 233, 0.06);
+  --color-sidebar-bg: #F1F5F9;
+  --color-nav-active: rgba(14, 165, 233, 0.12);
+
+  /* Typography */
+  --font-sans: "Satoshi", var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
-/* Pulse animation for active status indicators */
+/* === NexGen Glass Panel === */
+.glass-card {
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-card-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.glass-card:hover {
+  border-color: rgba(14, 165, 233, 0.2);
+}
+
+/* === Interactive Cards (Suggestion Action Cards) === */
+.suggestion-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: 24px;
+  padding: 24px;
+  transition: all 0.2s ease;
+}
+
+.suggestion-card:hover {
+  background: var(--color-surface-hover);
+  border-color: rgba(14, 165, 233, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.08);
+}
+
+/* === NexGen Input Focus Glow === */
+.nexgen-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1), 0 0 20px -5px rgba(14, 165, 233, 0.1);
+  outline: none;
+}
+
+/* === NexGen Button === */
+.nexgen-btn {
+  border-radius: 16px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.nexgen-btn-primary {
+  background: var(--color-accent);
+  color: white;
+}
+
+.nexgen-btn-primary:hover {
+  background: #0284C7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+}
+
+.nexgen-btn-primary:active {
+  transform: scale(0.97);
+}
+
+/* === Sidebar Nav Pill === */
+.nav-pill {
+  position: relative;
+}
+
+.nav-pill.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 24px;
+  border-radius: 0 4px 4px 0;
+  background: var(--color-accent);
+}
+
+/* === Pulse animation for active status indicators === */
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
@@ -31,7 +114,7 @@ body {
   animation: pulse-dot 2s ease-in-out infinite;
 }
 
-/* Fade-in animation for cards and list items */
+/* === Fade-in animation === */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -41,7 +124,7 @@ body {
   animation: fade-in 0.3s ease-out both;
 }
 
-/* Slide-in from left for activity feed entries */
+/* === Slide-in from left === */
 @keyframes slide-in-left {
   from { opacity: 0; transform: translateX(-12px); }
   to { opacity: 1; transform: translateX(0); }
@@ -51,7 +134,7 @@ body {
   animation: slide-in-left 0.25s ease-out both;
 }
 
-/* Waveform bars for active call indicator */
+/* === Waveform bars for active call indicator === */
 @keyframes waveform {
   0%, 100% { height: 4px; }
   50% { height: 16px; }
@@ -70,19 +153,12 @@ body {
 .waveform-bar:nth-child(4) { animation-delay: 0.45s; }
 .waveform-bar:nth-child(5) { animation-delay: 0.6s; }
 
-/* Glass card effect */
-.glass-card {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(51, 65, 85, 0.5);
-}
-
-/* Smooth number transition helper */
+/* === Smooth number transition helper === */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* Scroll shadow for transcript containers */
+/* === Scroll shadow for transcript containers === */
 .scroll-shadow {
   mask-image: linear-gradient(
     to bottom,
@@ -93,10 +169,58 @@ body {
   );
 }
 
-/* Projector-friendly large metric */
+/* === Projector-friendly large metric === */
 .metric-xl {
   font-size: 2.5rem;
   line-height: 1;
   font-weight: 700;
   letter-spacing: -0.02em;
+}
+
+/* === NexGen Section Label (uppercase tracking) === */
+.section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+}
+
+/* === NexGen Heading (tight tracking) === */
+.nexgen-heading {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* === Progress bar for context documents === */
+.progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-card-border);
+}
+
+.progress-fill {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-accent);
+  transition: width 0.5s ease;
+}
+
+/* === Background decorative glow === */
+.bg-glow {
+  position: fixed;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.06) 0%, transparent 70%);
+}
+
+/* === Onboarding step transition === */
+@keyframes step-enter {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-step-enter {
+  animation: step-enter 0.35s ease-out both;
 }

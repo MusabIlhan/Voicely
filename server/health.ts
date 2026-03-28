@@ -63,7 +63,7 @@ async function checkGemini(): Promise<ServiceHealthDetail> {
   const start = Date.now();
   try {
     const genAI = new GoogleGenAI({ apiKey: config.gemini.apiKey });
-    await genAI.models.get({ model: "gemini-2.5-flash" });
+    await genAI.models.get({ model: "gemini-3.1-flash-lite-preview" });
     return { status: "healthy", latencyMs: Date.now() - start };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

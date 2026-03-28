@@ -7,6 +7,8 @@ import { URL } from "url";
 import { config, isConfigured } from "./config.js";
 import { sseHandler } from "./events.js";
 import { runHealthCheck } from "./health.js";
+import authRoutes from "./auth.js";
+import { clearKnowledgeCache, loadKnowledgeBase, saveKnowledgeBase, type KnowledgeBase } from "./knowledge/index.js";
 import recallWebhooks from "./meeting/webhooks.js";
 import twilioWebhooks from "./twilio/webhooks.js";
 import { initiateOutboundCall } from "./twilio/outbound.js";
@@ -66,6 +68,7 @@ export function createApp() {
     next();
   });
 
+  app.use(authRoutes);
   app.use(twilioWebhooks);
   app.use(recallWebhooks);
 
@@ -241,6 +244,31 @@ export function createApp() {
       res.json({ success: true });
     } catch (error) {
       res.status(404).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get("/knowledge", (_req, res) => {
+    try {
+      clearKnowledgeCache();
+      const kb = loadKnowledgeBase();
+      res.json(kb);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.put("/knowledge", (req, res) => {
+    const kb = req.body as KnowledgeBase;
+    if (!kb || !kb.company || !kb.products) {
+      res.status(400).json({ error: "Invalid knowledge base format. Requires company and products." });
+      return;
+    }
+
+    try {
+      saveKnowledgeBase(kb);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
     }
   });
 

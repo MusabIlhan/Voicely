@@ -84,7 +84,7 @@ export const config: ServerConfig = {
     bearerToken: getEnv("MAIN_AGENT_BEARER_TOKEN"),
   },
   server: {
-    port: parseInt(getEnv("BRIDGE_SERVER_PORT", "8080"), 10),
+    port: parseInt(getEnv("PORT", getEnv("BRIDGE_SERVER_PORT", "8080")), 10),
     host: getEnv("BRIDGE_SERVER_HOST", "localhost"),
     publicUrl: getEnv("PUBLIC_SERVER_URL"),
   },

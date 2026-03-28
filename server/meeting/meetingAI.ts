@@ -22,8 +22,8 @@ const MEETING_TOOLS: GeminiToolConfig[] = [
   searchBusiness,
 ];
 
-const TEXT_MODEL = "gemini-2.5-flash";
-const TTS_MODEL = "gemini-2.5-flash-preview-tts";
+const TEXT_MODEL = "gemini-3.1-flash-lite-preview";
+const TTS_MODEL = "gemini-2.5-flash-native-audio-latest";
 const MAX_TOOL_ROUNDS = 3;
 
 export class MeetingAI {

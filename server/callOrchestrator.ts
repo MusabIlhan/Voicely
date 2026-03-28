@@ -10,8 +10,11 @@ import type { CallSession, CallStatus, CallDirection } from "../shared/types";
 import { emitServerEvent } from "./events";
 
 // Minimum audio chunk size (in bytes) to send to Gemini.
-// Gemini Live API works best with chunks of at least ~4000 bytes of PCM 16kHz.
-const MIN_AUDIO_CHUNK_BYTES = 4000;
+// Lower = less latency. 1600 bytes = ~50ms of 16kHz 16-bit mono PCM.
+const MIN_AUDIO_CHUNK_BYTES = 1600;
+
+// Max time (ms) audio can sit in the buffer before being flushed, even if under threshold.
+const AUDIO_FLUSH_INTERVAL_MS = 40;
 
 export interface CallOrchestratorOptions {
   direction?: CallDirection;
@@ -30,6 +33,7 @@ export class CallOrchestrator extends EventEmitter {
   private geminiSession: GeminiLiveSession;
   private session: CallSession;
   private audioBuffer: Buffer = Buffer.alloc(0);
+  private audioFlushTimer: ReturnType<typeof setTimeout> | null = null;
   private cleanedUp = false;
 
   constructor(twilioWs: WebSocket, options: CallOrchestratorOptions = {}) {
@@ -79,8 +83,10 @@ export class CallOrchestrator extends EventEmitter {
       this.audioBuffer = Buffer.concat([this.audioBuffer, pcm16k]);
 
       if (this.audioBuffer.length >= MIN_AUDIO_CHUNK_BYTES) {
-        this.geminiSession.sendAudio(this.audioBuffer);
-        this.audioBuffer = Buffer.alloc(0);
+        this.flushAudioBuffer();
+      } else if (!this.audioFlushTimer) {
+        // Ensure buffered audio is sent within AUDIO_FLUSH_INTERVAL_MS even if under threshold
+        this.audioFlushTimer = setTimeout(() => this.flushAudioBuffer(), AUDIO_FLUSH_INTERVAL_MS);
       }
     });
 
@@ -101,9 +107,11 @@ export class CallOrchestrator extends EventEmitter {
       console.log(`[Orchestrator] Gemini connected — call is now active`);
 
       // Flush any buffered audio
-      if (this.audioBuffer.length > 0) {
-        this.geminiSession.sendAudio(this.audioBuffer);
-        this.audioBuffer = Buffer.alloc(0);
+      this.flushAudioBuffer();
+
+      // On outbound calls, prompt Gemini to start speaking immediately
+      if (this.session.direction === "outbound") {
+        this.geminiSession.sendText("The call has been answered. Start speaking now — introduce yourself and state your purpose.");
       }
     });
 
@@ -174,6 +182,17 @@ export class CallOrchestrator extends EventEmitter {
     });
   }
 
+  private flushAudioBuffer(): void {
+    if (this.audioFlushTimer) {
+      clearTimeout(this.audioFlushTimer);
+      this.audioFlushTimer = null;
+    }
+    if (this.audioBuffer.length > 0) {
+      this.geminiSession.sendAudio(this.audioBuffer);
+      this.audioBuffer = Buffer.alloc(0);
+    }
+  }
+
   private updateStatus(status: CallStatus): void {
     this.session.status = status;
     if (status === "ended") {
@@ -188,6 +207,10 @@ export class CallOrchestrator extends EventEmitter {
 
     console.log(`[Orchestrator] Cleaning up call ${this.session.twilioCallSid || this.session.id}`);
 
+    if (this.audioFlushTimer) {
+      clearTimeout(this.audioFlushTimer);
+      this.audioFlushTimer = null;
+    }
     this.geminiSession.close();
     this.twilioStream.close();
 
