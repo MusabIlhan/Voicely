@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { config, validateConfig, isConfigured } from "./config";
 import twilioWebhooks from "./twilio/webhooks";
+import recallWebhooks from "./meeting/webhooks";
 import { callManager } from "./callManager";
 import { initiateOutboundCall } from "./twilio/outbound";
 import type { BridgeServerStatus } from "../shared/types";
@@ -29,6 +30,9 @@ app.use((_req, res, next) => {
 
 // Mount Twilio webhook routes
 app.use(twilioWebhooks);
+
+// Mount Recall.ai webhook routes
+app.use(recallWebhooks);
 
 // Status endpoint for the dashboard
 app.get("/status", (_req, res) => {

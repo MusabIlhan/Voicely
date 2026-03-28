@@ -28,7 +28,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
     - `TranscriptEntry` — speaker, text, timestamp
     - `MeetingParticipant` — name, speakerId
 
-- [ ] Build the real-time meeting transcription and context management pipeline:
+- [x] Build the real-time meeting transcription and context management pipeline:
   - Create `server/meeting/contextManager.ts`:
     - Maintains a rolling context window of the meeting conversation (last N minutes or last M transcript entries)
     - `addTranscriptEntry(entry: TranscriptEntry)` — adds a new transcript line with speaker attribution
