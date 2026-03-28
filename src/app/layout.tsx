@@ -69,6 +69,12 @@ export default function RootLayout({
               >
                 Meetings
               </Link>
+              <Link
+                href="/integrations"
+                className="text-sm font-medium text-muted hover:text-foreground transition-colors"
+              >
+                Integrations
+              </Link>
             </div>
           </div>
         </nav>

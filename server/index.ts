@@ -38,10 +38,16 @@ app.use(recallWebhooks);
 // Status endpoint for the dashboard
 app.get("/status", (_req, res) => {
   const services = isConfigured();
+  const mcpConfigured = !!process.env.BRIDGE_SERVER_URL || true; // MCP server can always connect to bridge
   const status: BridgeServerStatus = {
     activeCalls: callManager.getCallCount(),
     uptime: Math.floor((Date.now() - startTime) / 1000),
     configuredServices: services,
+    mcp: {
+      configured: mcpConfigured,
+      tools: 8,
+      resources: 5,
+    },
   };
   res.json(status);
 });

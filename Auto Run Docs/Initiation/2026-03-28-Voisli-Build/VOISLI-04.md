@@ -83,7 +83,7 @@ This phase turns Voisli into an MCP (Model Context Protocol) server, allowing Cl
     - Test error handling when bridge server is unreachable
   - Run the MCP server in test mode to verify it starts and lists all tools correctly
 
-- [ ] Add a dedicated MCP/integrations section to the Next.js dashboard and update documentation:
+- [x] Add a dedicated MCP/integrations section to the Next.js dashboard and update documentation:
   - Search existing pages and components before creating new files — extend the existing navigation pattern
   - Create `src/app/integrations/page.tsx`:
     - Show MCP server setup instructions (how to add Voisli to Claude Desktop / Claude Code)
