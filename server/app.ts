@@ -9,6 +9,7 @@ import { sseHandler } from "./events.js";
 import { runHealthCheck } from "./health.js";
 import authRoutes from "./auth.js";
 import { clearKnowledgeCache, loadKnowledgeBase, saveKnowledgeBase, type KnowledgeBase } from "./knowledge/index.js";
+import { registerMcpHttpRoutes } from "./mcp/http.js";
 import recallWebhooks from "./meeting/webhooks.js";
 import twilioWebhooks from "./twilio/webhooks.js";
 import { initiateOutboundCall } from "./twilio/outbound.js";
@@ -50,6 +51,19 @@ function resolveMeetingSnapshot(id: string) {
   return voiceCoordinator.getSessionSnapshotByBotId(id);
 }
 
+function trimTrailingSlash(value: string): string {
+  return value.replace(/\/+$/, "");
+}
+
+function resolveMcpUrl(): string {
+  const baseUrl =
+    config.server.publicUrl ||
+    config.nextPublicBridgeServerUrl ||
+    `http://${config.server.host}:${config.server.port}`;
+
+  return `${trimTrailingSlash(baseUrl)}/mcp`;
+}
+
 export function createApp() {
   const app = express();
 
@@ -58,8 +72,16 @@ export function createApp() {
 
   app.use((_req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      _req.header("access-control-request-headers") ??
+        "Content-Type, Accept, Authorization, Mcp-Session-Id, Mcp-Protocol-Version, Last-Event-ID"
+    );
+    res.setHeader(
+      "Access-Control-Expose-Headers",
+      "Mcp-Session-Id, Mcp-Protocol-Version"
+    );
     if (_req.method === "OPTIONS") {
       res.sendStatus(204);
       return;
@@ -71,6 +93,7 @@ export function createApp() {
   app.use(authRoutes);
   app.use(twilioWebhooks);
   app.use(recallWebhooks);
+  registerMcpHttpRoutes(app);
 
   app.get("/events", sseHandler);
 
@@ -86,6 +109,8 @@ export function createApp() {
         configured: true,
         tools: 2,
         resources: 5,
+        transports: ["stdio", "streamable_http"],
+        url: resolveMcpUrl(),
       },
       configuredServices: {
         twilio: configured.twilio,

@@ -56,6 +56,15 @@ function isPlaceholder(value: string): boolean {
   );
 }
 
+const serverPort = parseInt(getEnv("PORT", getEnv("BRIDGE_SERVER_PORT", "8080")), 10);
+const serverHost = getEnv(
+  "BRIDGE_SERVER_HOST",
+  process.env.PORT ? "0.0.0.0" : "localhost"
+);
+const bridgeServerHost =
+  serverHost === "0.0.0.0" || serverHost === "::" ? "127.0.0.1" : serverHost;
+const defaultBridgeServerUrl = `http://${bridgeServerHost}:${serverPort}`;
+
 export const config: ServerConfig = {
   twilio: {
     accountSid: getEnv("TWILIO_ACCOUNT_SID"),
@@ -84,15 +93,15 @@ export const config: ServerConfig = {
     bearerToken: getEnv("MAIN_AGENT_BEARER_TOKEN"),
   },
   server: {
-    port: parseInt(getEnv("PORT", getEnv("BRIDGE_SERVER_PORT", "8080")), 10),
-    host: getEnv("BRIDGE_SERVER_HOST", "localhost"),
+    port: serverPort,
+    host: serverHost,
     publicUrl: getEnv("PUBLIC_SERVER_URL"),
   },
   nextPublicBridgeServerUrl: getEnv(
     "NEXT_PUBLIC_BRIDGE_SERVER_URL",
     "http://localhost:8080"
   ),
-  bridgeServerUrl: getEnv("BRIDGE_SERVER_URL", "http://localhost:8080"),
+  bridgeServerUrl: getEnv("BRIDGE_SERVER_URL", defaultBridgeServerUrl),
 };
 
 export function isConfigured(): ServiceStatus {

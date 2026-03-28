@@ -4,8 +4,9 @@
  * makes REST calls to the bridge server's API at the configured URL.
  */
 
-const BRIDGE_SERVER_URL =
-  process.env.BRIDGE_SERVER_URL ?? "http://localhost:8080";
+import { config } from "../config.js";
+
+const BRIDGE_SERVER_URL = config.bridgeServerUrl;
 
 export interface BridgeResponse<T = unknown> {
   ok: boolean;
