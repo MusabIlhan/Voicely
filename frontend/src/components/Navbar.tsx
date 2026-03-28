@@ -56,10 +56,10 @@ const Navbar = () => {
           Log in
         </a>
         <a
-          href="#pricing"
+          href="#signup"
           className="font-body text-[13px] font-semibold bg-gradient-to-r from-[#7C3AED] to-[#C026D3] text-white px-5 py-2.5 rounded-full hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300"
         >
-          Get Started
+          Sign Up
         </a>
       </div>
     </motion.nav>

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import LiveNotification from "./LiveNotification";
 import NeuralLines from "./NeuralLines";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, Star, LogIn } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -40,11 +40,11 @@ const HeroSection = () => {
           className="font-display leading-[1.05] mb-6"
           style={{ fontSize: "clamp(2.8rem, 7vw, 5rem)" }}
         >
-          Get 10 hours back
+          Outbound calls.
           <br />
-          every week.
+          Booked meetings.
           <br />
-          <span className="gradient-text">Your AI makes the calls.</span>
+          <span className="gradient-text">Direct answers. Automated.</span>
         </motion.h1>
 
         <motion.p
@@ -53,8 +53,9 @@ const HeroSection = () => {
           transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="font-body text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-10 font-light leading-relaxed"
         >
-          Voicely autonomously calls prospects, qualifies leads, books meetings
-          on your calendar, and follows up — so you can focus on closing.
+          Voicely makes outbound calls, books meetings on your calendar, answers
+          questions live on every call, and connects directly with your existing
+          AI agents — all without human intervention.
         </motion.p>
 
         <motion.div
@@ -64,17 +65,18 @@ const HeroSection = () => {
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6"
         >
           <a
-            href="#pricing"
+            href="#signup"
             className="font-body text-sm font-semibold bg-gradient-to-r from-[#7C3AED] to-[#C026D3] text-white px-8 py-3.5 rounded-full hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 flex items-center gap-2 group"
           >
-            Start Free Trial
+            Sign Up Free
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" />
           </a>
           <a
-            href="#how-it-works"
-            className="font-body text-sm font-semibold text-foreground bg-white border border-black/[0.08] px-8 py-3.5 rounded-full hover:border-black/[0.15] hover:shadow-lg hover:shadow-black/[0.04] transition-all duration-300"
+            href="#login"
+            className="font-body text-sm font-semibold text-foreground bg-white border border-black/[0.08] px-8 py-3.5 rounded-full hover:border-black/[0.15] hover:shadow-lg hover:shadow-black/[0.04] transition-all duration-300 flex items-center gap-2"
           >
-            Watch Demo
+            <LogIn className="w-4 h-4" />
+            Log In
           </a>
         </motion.div>
 
