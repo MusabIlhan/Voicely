@@ -7,6 +7,9 @@
       "phases": {
         "setup": {
           "nixPkgs": ["nodejs_22"]
+        },
+        "install": {
+          "cmds": ["npm install"]
         }
       }
     }
