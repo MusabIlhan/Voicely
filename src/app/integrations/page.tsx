@@ -165,8 +165,8 @@ export default function IntegrationsPage() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       {/* Header */}
-      <section className="mb-10">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+      <section className="mb-10 animate-fade-in">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
           Integrations
         </h1>
         <p className="mt-2 text-lg text-muted">
@@ -175,7 +175,7 @@ export default function IntegrationsPage() {
       </section>
 
       {/* MCP Setup */}
-      <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
+      <section className="mb-8 glass-card rounded-xl p-6 animate-fade-in">
         <div className="flex items-center gap-3 mb-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20">
             <svg
@@ -231,7 +231,7 @@ export default function IntegrationsPage() {
       </section>
 
       {/* Test Connection */}
-      <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
+      <section className="mb-8 glass-card rounded-xl p-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-foreground">
@@ -244,14 +244,14 @@ export default function IntegrationsPage() {
           <button
             onClick={handleTestConnection}
             disabled={testing}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-light disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-all hover:bg-accent-light hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             {testing ? "Testing..." : "Test Connection"}
           </button>
         </div>
         {testResult && (
           <p
-            className={`mt-3 text-sm ${testResult.success ? "text-success" : "text-danger"}`}
+            className={`mt-3 text-sm animate-fade-in ${testResult.success ? "text-success" : "text-danger"}`}
           >
             {testResult.message}
           </p>
@@ -259,8 +259,8 @@ export default function IntegrationsPage() {
       </section>
 
       {/* Available Tools */}
-      <section className="mb-8 rounded-xl border border-card-border bg-card">
-        <div className="border-b border-card-border px-5 py-4">
+      <section className="mb-8 glass-card rounded-xl animate-fade-in">
+        <div className="border-b border-card-border/50 px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-success/20">
               <svg
@@ -286,9 +286,13 @@ export default function IntegrationsPage() {
             </div>
           </div>
         </div>
-        <div className="divide-y divide-card-border">
-          {TOOLS.map((tool) => (
-            <div key={tool.name} className="px-5 py-4">
+        <div className="divide-y divide-card-border/50">
+          {TOOLS.map((tool, i) => (
+            <div
+              key={tool.name}
+              className="px-5 py-4 animate-fade-in"
+              style={{ animationDelay: `${i * 30}ms` }}
+            >
               <div className="flex items-start gap-3">
                 <code className="shrink-0 rounded bg-background px-2 py-0.5 font-mono text-xs text-accent-light">
                   {tool.name}
@@ -316,8 +320,8 @@ export default function IntegrationsPage() {
       </section>
 
       {/* Available Resources */}
-      <section className="mb-8 rounded-xl border border-card-border bg-card">
-        <div className="border-b border-card-border px-5 py-4">
+      <section className="mb-8 glass-card rounded-xl animate-fade-in">
+        <div className="border-b border-card-border/50 px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20">
               <svg
@@ -341,9 +345,13 @@ export default function IntegrationsPage() {
             </div>
           </div>
         </div>
-        <div className="divide-y divide-card-border">
-          {RESOURCES.map((resource) => (
-            <div key={resource.uri} className="flex items-start gap-3 px-5 py-4">
+        <div className="divide-y divide-card-border/50">
+          {RESOURCES.map((resource, i) => (
+            <div
+              key={resource.uri}
+              className="flex items-start gap-3 px-5 py-4 animate-fade-in"
+              style={{ animationDelay: `${i * 30}ms` }}
+            >
               <code className="shrink-0 rounded bg-background px-2 py-0.5 font-mono text-xs text-accent-light">
                 {resource.uri}
               </code>

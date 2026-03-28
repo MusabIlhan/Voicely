@@ -100,8 +100,8 @@ export default function MeetingsPage() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       {/* Header */}
-      <section className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+      <section className="mb-8 animate-fade-in">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Meetings
         </h1>
         <p className="mt-2 text-sm text-muted">
@@ -110,7 +110,7 @@ export default function MeetingsPage() {
       </section>
 
       {/* Join a Meeting */}
-      <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
+      <section className="mb-8 glass-card rounded-xl p-6 animate-fade-in">
         <h2 className="text-lg font-semibold text-foreground">
           Join a Meeting
         </h2>
@@ -124,7 +124,7 @@ export default function MeetingsPage() {
             value={meetingUrl}
             onChange={(e) => setMeetingUrl(e.target.value)}
             required
-            className="w-full rounded-lg border border-card-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted/60 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            className="w-full rounded-lg border border-card-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted/60 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors"
           />
           <div className="flex items-end gap-3">
             <div className="flex-1">
@@ -136,13 +136,13 @@ export default function MeetingsPage() {
                 placeholder="Voisli Assistant"
                 value={botName}
                 onChange={(e) => setBotName(e.target.value)}
-                className="w-full rounded-lg border border-card-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted/60 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                className="w-full rounded-lg border border-card-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted/60 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors"
               />
             </div>
             <button
               type="submit"
               disabled={joinLoading || !meetingUrl.trim()}
-              className="rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-light disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent-light hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {joinLoading ? "Joining..." : "Send Bot"}
             </button>
@@ -150,7 +150,7 @@ export default function MeetingsPage() {
         </form>
         {joinResult && (
           <p
-            className={`mt-3 text-sm ${joinResult.success ? "text-success" : "text-danger"}`}
+            className={`mt-3 text-sm animate-fade-in ${joinResult.success ? "text-success" : "text-danger"}`}
           >
             {joinResult.message}
           </p>
@@ -158,35 +158,43 @@ export default function MeetingsPage() {
       </section>
 
       {/* Active Meetings */}
-      <section className="mb-8 rounded-xl border border-card-border bg-card">
-        <div className="border-b border-card-border px-5 py-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            Active Meetings
-          </h2>
+      <section className="mb-8 glass-card rounded-xl">
+        <div className="border-b border-card-border/50 px-5 py-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground">
+              Active Meetings
+            </h2>
+            {activeSessions.length > 0 && (
+              <span className="h-2 w-2 rounded-full bg-success animate-pulse-dot" />
+            )}
+          </div>
         </div>
         {loading ? (
           <div className="px-5 py-8 text-center">
-            <p className="text-sm text-muted">Loading meetings...</p>
+            <div className="mx-auto h-8 w-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+            <p className="mt-3 text-sm text-muted">Loading meetings...</p>
           </div>
         ) : activeSessions.length === 0 ? (
           <div className="px-5 py-8 text-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="mx-auto h-10 w-10 text-muted/40"
-            >
-              <path d="M4.5 4.5a3 3 0 00-3 3v9a3 3 0 003 3h8.25a3 3 0 003-3v-9a3 3 0 00-3-3H4.5zM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06z" />
-            </svg>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted/10">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-6 w-6 text-muted/30"
+              >
+                <path d="M4.5 4.5a3 3 0 00-3 3v9a3 3 0 003 3h8.25a3 3 0 003-3v-9a3 3 0 00-3-3H4.5zM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06z" />
+              </svg>
+            </div>
             <p className="mt-3 text-sm text-muted">No active meetings</p>
             <p className="mt-1 text-xs text-muted/60">
               Join a meeting above to get started
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-card-border">
-            {activeSessions.map((session) => (
-              <MeetingRow key={session.botId} session={session} />
+          <ul className="divide-y divide-card-border/50">
+            {activeSessions.map((session, i) => (
+              <MeetingRow key={session.botId} session={session} index={i} />
             ))}
           </ul>
         )}
@@ -194,15 +202,15 @@ export default function MeetingsPage() {
 
       {/* Past Meetings */}
       {pastSessions.length > 0 && (
-        <section className="rounded-xl border border-card-border bg-card">
-          <div className="border-b border-card-border px-5 py-4">
+        <section className="glass-card rounded-xl animate-fade-in">
+          <div className="border-b border-card-border/50 px-5 py-4">
             <h2 className="text-lg font-semibold text-foreground">
               Past Meetings
             </h2>
           </div>
-          <ul className="divide-y divide-card-border">
-            {pastSessions.map((session) => (
-              <MeetingRow key={session.botId} session={session} />
+          <ul className="divide-y divide-card-border/50">
+            {pastSessions.map((session, i) => (
+              <MeetingRow key={session.botId} session={session} index={i} />
             ))}
           </ul>
         </section>
@@ -211,18 +219,23 @@ export default function MeetingsPage() {
   );
 }
 
-function MeetingRow({ session }: { session: MeetingSession }) {
+function MeetingRow({ session, index }: { session: MeetingSession; index: number }) {
   const startDate = new Date(session.startedAt);
   const endDate = session.endedAt ? new Date(session.endedAt) : null;
 
   const duration = endDate
     ? formatDuration(endDate.getTime() - startDate.getTime())
     : session.status === "done"
-      ? "—"
+      ? "\u2014"
       : "In progress";
 
+  const isActive = session.status === "in_call" || session.status === "joining" || session.status === "creating";
+
   return (
-    <li className="px-5 py-4">
+    <li
+      className="px-5 py-4 animate-fade-in"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 min-w-0">
           <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/20 text-accent-light">
@@ -245,6 +258,9 @@ function MeetingRow({ session }: { session: MeetingSession }) {
                 Meeting
               </Link>
               <MeetingStatusBadge status={session.status} />
+              {isActive && (
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-dot" />
+              )}
             </div>
 
             <p className="mt-1 text-xs text-muted truncate max-w-sm">
@@ -260,7 +276,7 @@ function MeetingRow({ session }: { session: MeetingSession }) {
         </div>
 
         <div className="shrink-0 text-right">
-          <p className="font-mono text-sm text-accent-light">{duration}</p>
+          <p className="font-mono text-sm text-accent-light tabular-nums">{duration}</p>
           <p className="mt-1 text-xs text-muted/60">
             {startDate.toLocaleString()}
           </p>
@@ -296,9 +312,9 @@ function MeetingStatusBadge({ status }: { status: MeetingBotStatus }) {
   };
 
   const dotColors: Record<MeetingBotStatus, string> = {
-    creating: "bg-yellow-500",
-    joining: "bg-yellow-500",
-    in_call: "bg-success",
+    creating: "bg-yellow-500 animate-pulse-dot",
+    joining: "bg-yellow-500 animate-pulse-dot",
+    in_call: "bg-success animate-pulse-dot",
     leaving: "bg-muted",
     done: "bg-muted",
     error: "bg-danger",

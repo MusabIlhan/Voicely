@@ -7,20 +7,8 @@ interface StatusCardProps {
 }
 
 export default function StatusCard({ label, status, detail }: StatusCardProps) {
-  const colors = {
-    online: "bg-success",
-    offline: "bg-danger",
-    unknown: "bg-muted",
-  };
-
-  const labels = {
-    online: "Online",
-    offline: "Offline",
-    unknown: "Unknown",
-  };
-
   return (
-    <div className="rounded-xl border border-card-border bg-card p-5">
+    <div className="glass-card rounded-xl p-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-muted">{label}</span>
         <span
@@ -32,12 +20,22 @@ export default function StatusCard({ label, status, detail }: StatusCardProps) {
                 : "bg-muted/10 text-muted"
           }`}
         >
-          <span className={`h-1.5 w-1.5 rounded-full ${colors[status]}`} />
-          {labels[status]}
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              status === "online"
+                ? "bg-success animate-pulse-dot"
+                : status === "offline"
+                  ? "bg-danger"
+                  : "bg-muted"
+            }`}
+          />
+          {status === "online" ? "Online" : status === "offline" ? "Offline" : "Unknown"}
         </span>
       </div>
       {detail && (
-        <p className="mt-2 text-2xl font-bold text-foreground">{detail}</p>
+        <p className="mt-2 text-2xl font-bold text-foreground tabular-nums">
+          {detail}
+        </p>
       )}
     </div>
   );

@@ -4,7 +4,7 @@ This is the final phase — polish the UI, add real-time updates so the dashboar
 
 ## Tasks
 
-- [ ] Add real-time WebSocket updates to the Next.js dashboard so it reflects live activity without polling:
+- [x] Add real-time WebSocket updates to the Next.js dashboard so it reflects live activity without polling:
   - Search the existing `server/index.ts` and dashboard components to understand the current polling approach before making changes
   - Create `server/events.ts` — a server-sent events (SSE) or WebSocket endpoint for the dashboard:
     - Add a `GET /events` SSE endpoint to the Express bridge server
@@ -20,7 +20,7 @@ This is the final phase — polish the UI, add real-time updates so the dashboar
     - `src/app/calls/page.tsx` — calls appear/update in real-time
     - `src/app/meetings/[botId]/page.tsx` — transcript updates stream in live
 
-- [ ] Polish the dashboard UI for demo-day visual impact:
+- [x] Polish the dashboard UI for demo-day visual impact:
   - Search all existing components in `src/components/` and pages in `src/app/` to understand the current design before making changes
   - Enhance the main dashboard (`src/app/page.tsx`):
     - Add an animated activity feed showing real-time events with timestamps (call started, tool invoked, meeting joined, etc.)

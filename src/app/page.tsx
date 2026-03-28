@@ -206,30 +206,77 @@ export default function Home() {
 
   const twilioReady = status?.configuredServices.twilio ?? false;
   const geminiReady = status?.configuredServices.gemini ?? false;
+  const activeCalls = status?.activeCalls ?? 0;
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       {/* Hero */}
-      <section className="mb-10">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+      <section className="mb-10 animate-fade-in">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
           Voisli
         </h1>
         <p className="mt-2 text-lg text-muted">Your AI Voice Assistant</p>
-        {/* SSE connection indicator */}
-        <p className="mt-1 text-xs text-muted/60">
-          Live updates:{" "}
+        <div className="mt-2 flex items-center gap-2">
           <span
-            className={
+            className={`h-2 w-2 rounded-full ${
               sseStatus === "connected"
-                ? "text-success"
+                ? "bg-success animate-pulse-dot"
                 : sseStatus === "connecting"
-                  ? "text-yellow-400"
-                  : "text-danger"
-            }
-          >
-            {sseStatus}
+                  ? "bg-warning animate-pulse-dot"
+                  : "bg-danger"
+            }`}
+          />
+          <span className="text-xs text-muted/60">
+            Live updates:{" "}
+            <span
+              className={
+                sseStatus === "connected"
+                  ? "text-success"
+                  : sseStatus === "connecting"
+                    ? "text-warning"
+                    : "text-danger"
+              }
+            >
+              {sseStatus}
+            </span>
           </span>
-        </p>
+        </div>
+      </section>
+
+      {/* Key Metrics — large, projector-friendly */}
+      <section className="mb-8 grid gap-4 sm:grid-cols-3">
+        <div className="glass-card rounded-xl p-6 animate-fade-in">
+          <p className="text-sm font-medium text-muted">Active Calls</p>
+          <div className="mt-2 flex items-end gap-3">
+            <span className="metric-xl text-foreground tabular-nums">
+              {activeCalls}
+            </span>
+            {activeCalls > 0 && (
+              <div className="mb-1.5 flex items-center gap-0.5 h-4">
+                <span className="waveform-bar" />
+                <span className="waveform-bar" />
+                <span className="waveform-bar" />
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="glass-card rounded-xl p-6 animate-fade-in" style={{ animationDelay: "50ms" }}>
+          <p className="text-sm font-medium text-muted">Active Meetings</p>
+          <div className="mt-2 flex items-end gap-3">
+            <span className="metric-xl text-foreground tabular-nums">
+              {activeMeetings}
+            </span>
+            {activeMeetings > 0 && (
+              <span className="mb-2 h-2.5 w-2.5 rounded-full bg-success animate-pulse-dot" />
+            )}
+          </div>
+        </div>
+        <div className="glass-card rounded-xl p-6 animate-fade-in" style={{ animationDelay: "100ms" }}>
+          <p className="text-sm font-medium text-muted">Uptime</p>
+          <span className="mt-2 block metric-xl text-foreground tabular-nums">
+            {online && status ? formatUptime(status.uptime) : "--"}
+          </span>
+        </div>
       </section>
 
       {/* Status Cards */}
@@ -263,7 +310,7 @@ export default function Home() {
       </section>
 
       {/* Active Meetings */}
-      <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
+      <section className="mb-8 glass-card rounded-xl p-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20">
@@ -297,7 +344,7 @@ export default function Home() {
       </section>
 
       {/* Make a Test Call */}
-      <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
+      <section className="mb-8 glass-card rounded-xl p-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-foreground">
@@ -310,14 +357,14 @@ export default function Home() {
           <button
             onClick={handleTestCall}
             disabled={callLoading || !online}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-light disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-all hover:bg-accent-light hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             {callLoading ? "Calling..." : "Place Test Call"}
           </button>
         </div>
         {callResult && (
           <p
-            className={`mt-3 text-sm ${callResult.success ? "text-success" : "text-danger"}`}
+            className={`mt-3 text-sm animate-fade-in ${callResult.success ? "text-success" : "text-danger"}`}
           >
             {callResult.message}
           </p>
@@ -325,31 +372,45 @@ export default function Home() {
       </section>
 
       {/* Live Activity Feed */}
-      <section className="mb-8 rounded-xl border border-card-border bg-card">
-        <div className="flex items-center justify-between border-b border-card-border px-5 py-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            Live Activity
-          </h2>
+      <section className="mb-8 glass-card rounded-xl">
+        <div className="flex items-center justify-between border-b border-card-border/50 px-5 py-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground">
+              Live Activity
+            </h2>
+            {activityFeed.length > 0 && (
+              <span className="h-2 w-2 rounded-full bg-success animate-pulse-dot" />
+            )}
+          </div>
           <span className="text-xs text-muted">Real-time events</span>
         </div>
         {activityFeed.length === 0 ? (
           <div className="px-5 py-8 text-center">
-            <p className="text-sm text-muted">No live events yet</p>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted/10">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-muted/40">
+                <path fillRule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <p className="mt-3 text-sm text-muted">No live events yet</p>
             <p className="mt-1 text-xs text-muted/60">
               Events will appear here in real-time as calls and meetings happen
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-card-border max-h-64 overflow-y-auto">
-            {activityFeed.map((entry) => (
-              <li key={entry.id} className="flex items-center gap-3 px-5 py-2.5">
+          <ul className="divide-y divide-card-border/50 max-h-72 overflow-y-auto scroll-shadow">
+            {activityFeed.map((entry, i) => (
+              <li
+                key={entry.id}
+                className="flex items-center gap-3 px-5 py-2.5 animate-slide-in"
+                style={{ animationDelay: `${i * 30}ms` }}
+              >
                 <EventIcon type={entry.type} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-foreground truncate">
                     {entry.message}
                   </p>
                 </div>
-                <span className="shrink-0 text-xs text-muted/60">
+                <span className="shrink-0 text-xs text-muted/60 tabular-nums">
                   {new Date(entry.timestamp).toLocaleTimeString()}
                 </span>
               </li>
@@ -359,8 +420,8 @@ export default function Home() {
       </section>
 
       {/* Recent Call Activity */}
-      <section className="mb-8 rounded-xl border border-card-border bg-card">
-        <div className="flex items-center justify-between border-b border-card-border px-5 py-4">
+      <section className="mb-8 glass-card rounded-xl">
+        <div className="flex items-center justify-between border-b border-card-border/50 px-5 py-4">
           <h2 className="text-lg font-semibold text-foreground">
             Recent Activity
           </h2>
@@ -373,12 +434,21 @@ export default function Home() {
         </div>
         {recentCalls.length === 0 ? (
           <div className="px-5 py-8 text-center">
-            <p className="text-sm text-muted">No recent calls</p>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted/10">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-muted/40">
+                <path fillRule="evenodd" d="M1.5 4.5a3 3 0 013-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 01-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 006.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 011.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 01-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <p className="mt-3 text-sm text-muted">No recent calls</p>
           </div>
         ) : (
-          <ul className="divide-y divide-card-border">
-            {recentCalls.map((call) => (
-              <li key={call.id} className="flex items-center justify-between px-5 py-3">
+          <ul className="divide-y divide-card-border/50">
+            {recentCalls.map((call, i) => (
+              <li
+                key={call.id}
+                className="flex items-center justify-between px-5 py-3 animate-fade-in"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
@@ -390,9 +460,14 @@ export default function Home() {
                     {call.direction === "inbound" ? "\u2193" : "\u2191"}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground capitalize">
-                      {call.direction}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-foreground capitalize">
+                        {call.direction}
+                      </p>
+                      {call.status === "active" && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-dot" />
+                      )}
+                    </div>
                     {call.purpose && (
                       <p className="text-xs text-muted truncate max-w-xs">
                         {call.purpose}
@@ -405,7 +480,7 @@ export default function Home() {
                     call.status === "active"
                       ? "text-success"
                       : call.status === "connecting"
-                        ? "text-yellow-400"
+                        ? "text-warning"
                         : "text-muted"
                   }`}
                 >
@@ -419,7 +494,7 @@ export default function Home() {
 
       {/* Quick Setup */}
       {(!twilioReady || !geminiReady) && (
-        <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
+        <section className="mb-8 glass-card rounded-xl p-6 animate-fade-in">
           <h2 className="text-lg font-semibold text-foreground">
             Quick Setup
           </h2>
@@ -456,7 +531,7 @@ export default function Home() {
       )}
 
       {/* How to Test */}
-      <section className="rounded-xl border border-card-border bg-card p-6">
+      <section className="glass-card rounded-xl p-6 animate-fade-in">
         <h2 className="text-lg font-semibold text-foreground">How to Test</h2>
         <ol className="mt-4 space-y-3 text-sm text-muted">
           <Step
@@ -532,4 +607,12 @@ function Step({ n, text }: { n: number; text: string }) {
       <span>{text}</span>
     </li>
   );
+}
+
+function formatUptime(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
 }

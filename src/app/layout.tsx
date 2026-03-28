@@ -29,10 +29,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <nav className="border-b border-card-border bg-card px-6 py-4">
+        <nav className="border-b border-card-border/50 bg-card/80 backdrop-blur-lg px-6 py-4 sticky top-0 z-50">
           <div className="mx-auto flex max-w-5xl items-center justify-between">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent transition-transform group-hover:scale-110">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"

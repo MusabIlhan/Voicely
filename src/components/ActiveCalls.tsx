@@ -11,9 +11,12 @@ interface ActiveCall {
 
 export default function ActiveCalls({ calls }: { calls: ActiveCall[] }) {
   return (
-    <div className="rounded-xl border border-card-border bg-card">
-      <div className="border-b border-card-border px-5 py-4">
-        <h2 className="text-lg font-semibold text-foreground">Active Calls</h2>
+    <div className="glass-card rounded-xl">
+      <div className="border-b border-card-border/50 px-5 py-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-foreground">Active Calls</h2>
+          {calls.length > 0 && <WaveformIndicator />}
+        </div>
       </div>
       {calls.length === 0 ? (
         <div className="px-5 py-10 text-center">
@@ -21,7 +24,7 @@ export default function ActiveCalls({ calls }: { calls: ActiveCall[] }) {
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="mx-auto h-10 w-10 text-muted/40"
+            className="mx-auto h-10 w-10 text-muted/30"
           >
             <path
               fillRule="evenodd"
@@ -35,9 +38,9 @@ export default function ActiveCalls({ calls }: { calls: ActiveCall[] }) {
           </p>
         </div>
       ) : (
-        <ul className="divide-y divide-card-border">
-          {calls.map((call) => (
-            <CallRow key={call.id} call={call} />
+        <ul className="divide-y divide-card-border/50">
+          {calls.map((call, i) => (
+            <CallRow key={call.id} call={call} index={i} />
           ))}
         </ul>
       )}
@@ -45,7 +48,19 @@ export default function ActiveCalls({ calls }: { calls: ActiveCall[] }) {
   );
 }
 
-function CallRow({ call }: { call: ActiveCall }) {
+function WaveformIndicator() {
+  return (
+    <div className="flex items-center gap-0.5 h-4">
+      <span className="waveform-bar" />
+      <span className="waveform-bar" />
+      <span className="waveform-bar" />
+      <span className="waveform-bar" />
+      <span className="waveform-bar" />
+    </div>
+  );
+}
+
+function CallRow({ call, index }: { call: ActiveCall; index: number }) {
   const [elapsed, setElapsed] = useState("");
 
   useEffect(() => {
@@ -62,14 +77,22 @@ function CallRow({ call }: { call: ActiveCall }) {
   }, [call.startedAt]);
 
   return (
-    <li className="flex items-center justify-between px-5 py-3">
-      <div>
-        <p className="text-sm font-medium text-foreground">
-          {call.twilioCallSid}
-        </p>
-        <p className="text-xs text-muted capitalize">{call.status}</p>
+    <li
+      className="flex items-center justify-between px-5 py-3 animate-fade-in"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
+      <div className="flex items-center gap-3">
+        <WaveformIndicator />
+        <div>
+          <p className="text-sm font-medium text-foreground">
+            {call.twilioCallSid}
+          </p>
+          <p className="text-xs text-muted capitalize">{call.status}</p>
+        </div>
       </div>
-      <span className="font-mono text-sm text-accent-light">{elapsed}</span>
+      <span className="font-mono text-sm text-accent-light tabular-nums">
+        {elapsed}
+      </span>
     </li>
   );
 }
