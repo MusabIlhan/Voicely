@@ -6,6 +6,7 @@ import {
   type LiveServerMessage,
   type LiveServerToolCall,
   type LiveConnectConfig,
+  type FunctionResponse,
 } from "@google/genai";
 import { config } from "@server/config";
 import type { GeminiConfig } from "../../shared/types";
@@ -146,6 +147,23 @@ export class GeminiLiveSession extends EventEmitter {
         mimeType: AUDIO_MIME_TYPE,
       },
     });
+  }
+
+  /**
+   * Sends function/tool responses back to Gemini so it can continue the conversation.
+   * Call this after executing the tool calls received via the `toolCall` event.
+   */
+  sendToolResponse(functionResponses: FunctionResponse[]): void {
+    if (!this.session || !this.connected) {
+      console.warn("[Gemini] Cannot send tool response — not connected");
+      return;
+    }
+
+    console.log(
+      `[Gemini] Sending tool responses: ${functionResponses.map((r) => r.name).join(", ")}`
+    );
+
+    this.session.sendToolResponse({ functionResponses });
   }
 
   /**

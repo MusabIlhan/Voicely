@@ -3,6 +3,8 @@ import type WebSocket from "ws";
 import { TwilioMediaStream } from "./twilio/mediaStream";
 import { GeminiLiveSession } from "./gemini/liveClient";
 import { twilioToGemini, geminiToTwilio } from "./audio/converter";
+import { executeToolCalls } from "./tools/executor";
+import { allToolSchemas } from "./tools/schema";
 import type { CallSession, CallStatus } from "../shared/types";
 
 // Minimum audio chunk size (in bytes) to send to Gemini.
@@ -33,7 +35,7 @@ export class CallOrchestrator extends EventEmitter {
     };
 
     this.twilioStream = new TwilioMediaStream(twilioWs);
-    this.geminiSession = new GeminiLiveSession();
+    this.geminiSession = new GeminiLiveSession({ tools: allToolSchemas });
 
     this.wireUpTwilio();
     this.wireUpGemini();
@@ -96,6 +98,22 @@ export class CallOrchestrator extends EventEmitter {
 
     this.geminiSession.onText((text: string) => {
       console.log(`[Orchestrator] Transcript: ${text}`);
+    });
+
+    this.geminiSession.onToolCall((toolCall) => {
+      const calls = toolCall.functionCalls ?? [];
+      console.log(
+        `[Orchestrator] Tool call(s) received: ${calls.map((fc) => fc.name).join(", ")}`
+      );
+
+      executeToolCalls(calls)
+        .then((responses) => {
+          this.geminiSession.sendToolResponse(responses);
+        })
+        .catch((err) => {
+          console.error(`[Orchestrator] Tool execution failed: ${err.message}`);
+          this.emit("error", err);
+        });
     });
 
     this.geminiSession.onInterrupted(() => {

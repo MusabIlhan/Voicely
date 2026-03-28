@@ -4,7 +4,7 @@ This phase adds intelligence to the voice assistant. Gemini 3.1 Flash Live suppo
 
 ## Tasks
 
-- [ ] Implement the Gemini function calling / tool system. Search the existing `server/gemini/liveClient.ts` for how tool calls are currently handled (the `onToolCall` callback) and build on top of it:
+- [x] Implement the Gemini function calling / tool system. Search the existing `server/gemini/liveClient.ts` for how tool calls are currently handled (the `onToolCall` callback) and build on top of it:
   - Create `server/tools/schema.ts` — define all tool schemas in the format Gemini expects (FunctionDeclaration objects):
     - `check_calendar_availability` — params: date (string), time_start (string), time_end (string). Description: "Check if the user has availability on their calendar for a given date and time range"
     - `create_calendar_event` — params: title (string), date (string), time_start (string), time_end (string), description (string, optional), location (string, optional). Description: "Create a new event on the user's calendar"
