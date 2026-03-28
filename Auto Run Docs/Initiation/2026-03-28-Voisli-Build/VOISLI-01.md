@@ -117,7 +117,7 @@ Phone Call ← Twilio ← WebSocket (mulaw 8kHz) ← Bridge Server ← Gemini Li
     - Handle reconnection logic and session errors
     - Log key events (connection established, audio flowing, errors) for debugging
 
-- [ ] Create audio format conversion utilities in `server/audio/`:
+- [x] Create audio format conversion utilities in `server/audio/`:
   - Create `server/audio/converter.ts` with pure TypeScript implementations (no native dependencies — important for hackathon portability):
     - `mulawToLinear(mulawBytes: Buffer): Buffer` — decode G.711 μ-law to 16-bit linear PCM
       - Implement the standard mulaw decode table/algorithm (bias of 33, 8-bit to 16-bit expansion)
