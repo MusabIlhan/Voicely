@@ -337,7 +337,7 @@ export default function DemoPage() {
         </div>
       </section>
 
-      {/* ── Onboarding: Setup Guide ────────────────────────────────── */}
+      {/* ── Onboarding: Connect Claude to Your Phone ────────────── */}
       <section className="mb-8 glass-card rounded-xl animate-fade-in">
         <button
           onClick={() => setOnboardingOpen((v) => !v)}
@@ -346,21 +346,21 @@ export default function DemoPage() {
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-accent-light">
-                <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 01-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 0 4.842a3.75 3.75 0 01-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 01-1.5 0v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584zM12 18a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177A7.547 7.547 0 016.648 6.61a.75.75 0 00-1.152.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 011.925-3.545 3.75 3.75 0 013.255 3.717z" clipRule="evenodd" />
               </svg>
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">
-                Getting Started
+                Connect Claude to Your Phone
               </h2>
               <p className="text-sm text-muted">
-                Connect Claude to your phone in 4 steps
+                3 steps to give Claude a real phone number
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <OnboardingProgress
-              steps={[serverOnline, twilioReady && !!ngrokUrl, geminiReady, serverOnline && twilioReady && geminiReady]}
+              steps={[twilioReady, geminiReady, serverOnline && twilioReady && geminiReady]}
             />
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -375,122 +375,94 @@ export default function DemoPage() {
 
         {onboardingOpen && (
           <div className="border-t border-card-border/50 px-5 py-5 space-y-1">
-            {/* Step 1: Start Services */}
+            {/* Step 1: Your Phone Number */}
             <OnboardingStep
               step={1}
-              title="Start the Bridge Server"
-              done={serverOnline}
-            >
-              <p className="text-sm text-muted mb-2">
-                The bridge server connects Claude, Twilio, and the dashboard together.
-              </p>
-              <div className="rounded-lg border border-card-border bg-background p-3">
-                <code className="font-mono text-xs text-accent-light">npm run dev</code>
-              </div>
-              <p className="mt-2 text-xs text-muted/60">
-                Starts both the Next.js dashboard (port 3001) and bridge server (port 8080)
-              </p>
-            </OnboardingStep>
-
-            {/* Step 2: Phone Line */}
-            <OnboardingStep
-              step={2}
-              title="Connect Your Phone Line"
-              done={twilioReady && !!ngrokUrl}
+              title="Get a Phone Number"
+              done={twilioReady}
             >
               <p className="text-sm text-muted mb-3">
-                Set up Twilio so Claude can make and receive phone calls.
+                Claude needs a real phone number to make and receive calls. We use Twilio for this.
               </p>
-              <div className="space-y-2">
-                <div className="rounded-lg border border-card-border bg-background p-3 space-y-1.5">
-                  <p className="text-xs font-medium text-foreground/80">1. Add Twilio credentials to <code className="text-accent-light">.env</code></p>
-                  <pre className="font-mono text-[11px] text-muted leading-relaxed">{`TWILIO_ACCOUNT_SID=your_sid
-TWILIO_AUTH_TOKEN=your_token
-TWILIO_PHONE_NUMBER=+1xxxxxxxxxx`}</pre>
+              {twilioNumber ? (
+                <div className="rounded-lg border border-success/20 bg-success/5 p-4 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-success">
+                      <path fillRule="evenodd" d="M1.5 4.5a3 3 0 013-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 01-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 006.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 011.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 01-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs text-success font-medium">Claude&apos;s phone number</p>
+                    <p className="text-xl font-bold text-foreground tracking-wide">{twilioNumber}</p>
+                  </div>
                 </div>
-                <div className="rounded-lg border border-card-border bg-background p-3 space-y-1.5">
-                  <p className="text-xs font-medium text-foreground/80">2. Expose the server with ngrok</p>
-                  <code className="font-mono text-[11px] text-accent-light">ngrok http 8080</code>
-                  <p className="text-[11px] text-muted/60 mt-1">
-                    Copy the https URL and set it as <code className="text-accent-light">PUBLIC_SERVER_URL</code> in <code className="text-accent-light">.env</code>
+              ) : (
+                <div className="rounded-lg border border-card-border bg-background p-3">
+                  <p className="text-xs text-muted/60">
+                    Sign up at <span className="text-accent-light">twilio.com</span>, get a phone number, and add credentials to <code className="text-accent-light">.env</code>
                   </p>
                 </div>
-                <div className="rounded-lg border border-card-border bg-background p-3 space-y-1.5">
-                  <p className="text-xs font-medium text-foreground/80">3. Configure Twilio webhook</p>
-                  <p className="text-[11px] text-muted/60">
-                    In Twilio Console, set your phone number&apos;s Voice webhook to:
-                  </p>
-                  <code className="font-mono text-[11px] text-accent-light">
-                    {ngrokUrl ? `${ngrokUrl}/twiml` : "{PUBLIC_SERVER_URL}/twiml"}
-                  </code>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <StatusCheck label="Twilio credentials" ready={twilioReady} />
-                <StatusCheck label="Public URL" ready={!!ngrokUrl} />
-                {twilioNumber && (
-                  <span className="text-xs text-muted">
-                    Phone: <code className="text-accent-light">{twilioNumber}</code>
-                  </span>
-                )}
-              </div>
+              )}
             </OnboardingStep>
 
-            {/* Step 3: Connect Claude */}
+            {/* Step 2: Connect Claude */}
             <OnboardingStep
-              step={3}
-              title="Link Claude via MCP"
+              step={2}
+              title="Give Claude the Tools"
               done={geminiReady}
             >
               <p className="text-sm text-muted mb-3">
-                Add the Voisli MCP server so Claude can make calls, join meetings, and manage your calendar.
+                Paste this config into Claude Desktop or Claude Code. One paste — Claude gets {MCP_TOOLS.length} new abilities.
               </p>
-              <div className="rounded-lg border border-card-border bg-background p-3 space-y-1.5">
-                <p className="text-xs font-medium text-foreground/80">
-                  Add to your Claude Desktop or Claude Code config:
-                </p>
-                <pre className="font-mono text-[11px] text-muted leading-relaxed overflow-x-auto">{MCP_CONFIG}</pre>
+              <div className="relative rounded-lg border border-card-border bg-background p-3">
+                <button
+                  onClick={handleCopyConfig}
+                  className="absolute right-2 top-2 rounded-md bg-card-border/50 px-2 py-0.5 text-[10px] font-medium text-muted hover:text-foreground transition-colors"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+                <pre className="font-mono text-[11px] text-muted leading-relaxed overflow-x-auto pr-14">{MCP_CONFIG}</pre>
               </div>
-              <p className="mt-2 text-xs text-muted/60">
-                Once connected, Claude can use <span className="text-accent-light">{MCP_TOOLS.length} tools</span> including{" "}
-                <code className="text-accent-light">make_call</code>,{" "}
-                <code className="text-accent-light">join_meeting</code>, and{" "}
-                <code className="text-accent-light">check_calendar</code>
-              </p>
-              <div className="mt-3">
-                <StatusCheck label="AI model connected" ready={geminiReady} />
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {MCP_TOOLS.slice(0, 4).map((tool) => (
+                  <code
+                    key={tool.name}
+                    className="rounded bg-accent/10 px-1.5 py-0.5 font-mono text-[10px] text-accent-light"
+                  >
+                    {tool.name}
+                  </code>
+                ))}
+                <span className="rounded bg-card-border/30 px-1.5 py-0.5 text-[10px] text-muted">
+                  +{MCP_TOOLS.length - 4} more
+                </span>
               </div>
             </OnboardingStep>
 
-            {/* Step 4: Ready */}
+            {/* Step 3: Try It */}
             <OnboardingStep
-              step={4}
-              title="Test the Connection"
+              step={3}
+              title="Try It"
               done={serverOnline && twilioReady && geminiReady}
               isLast
             >
               <p className="text-sm text-muted mb-3">
-                Everything&apos;s wired up! Try it out:
+                Pick up your phone and try either:
               </p>
               <div className="flex flex-wrap gap-3">
-                <div className="flex-1 min-w-[200px] rounded-lg border border-card-border bg-background p-3">
-                  <p className="text-xs font-medium text-foreground/80 mb-1">Option A: Call in</p>
-                  <p className="text-[11px] text-muted/60">
-                    Call <code className="text-accent-light">{twilioNumber ?? "your Twilio number"}</code> from your phone.
-                    The AI assistant will pick up.
+                <div className="flex-1 min-w-[200px] rounded-lg border border-card-border bg-background p-4">
+                  <p className="text-sm font-medium text-foreground mb-1">Call Claude</p>
+                  <p className="text-xs text-muted/60">
+                    Dial{" "}
+                    <code className="text-accent-light font-semibold">{twilioNumber ?? "the number above"}</code>{" "}
+                    from your phone. The AI picks up and talks to you.
                   </p>
                 </div>
-                <div className="flex-1 min-w-[200px] rounded-lg border border-card-border bg-background p-3">
-                  <p className="text-xs font-medium text-foreground/80 mb-1">Option B: Ask Claude</p>
-                  <p className="text-[11px] text-muted/60">
-                    Tell Claude: &ldquo;Call +1234567890 and make a reservation for 2 tonight at 7pm&rdquo;
+                <div className="flex-1 min-w-[200px] rounded-lg border border-card-border bg-background p-4">
+                  <p className="text-sm font-medium text-foreground mb-1">Tell Claude to call</p>
+                  <p className="text-xs text-muted/60">
+                    In Claude, type: &ldquo;Call the restaurant at +1234567890 and book a table for 2 tonight at 7pm&rdquo;
                   </p>
                 </div>
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <StatusCheck label="Bridge" ready={serverOnline} />
-                <StatusCheck label="Twilio" ready={twilioReady} />
-                <StatusCheck label="AI" ready={geminiReady} />
               </div>
             </OnboardingStep>
           </div>
