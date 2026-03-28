@@ -9,6 +9,7 @@ import recallWebhooks from "./meeting/webhooks";
 import { callManager } from "./callManager";
 import { initiateOutboundCall } from "./twilio/outbound";
 import { meetingOrchestrator } from "./meeting/meetingOrchestrator";
+import { outputMediaHub } from "./meeting/outputMediaHub";
 import type { BridgeServerStatus } from "../shared/types";
 import { sseHandler } from "./events";
 
@@ -34,6 +35,12 @@ function summarizeUpgradeRequest(req: IncomingMessage) {
 
 function getUpgradePath(req: IncomingMessage): string {
   return new URL(req.url ?? "/", "http://localhost").pathname;
+}
+
+function getBotIdFromUpgradeRequest(req: IncomingMessage): string | null {
+  const url = new URL(req.url ?? "/", "http://localhost");
+  const botId = url.searchParams.get("botId");
+  return botId && botId.trim().length > 0 ? botId : null;
 }
 
 // Parse request bodies for Twilio webhooks
@@ -78,6 +85,10 @@ app.use(recallWebhooks);
 
 // SSE endpoint for real-time dashboard updates
 app.get("/events", sseHandler);
+
+app.get("/output-media/:botId", (req, res) => {
+  res.type("html").send(outputMediaHub.renderPage(req.params.botId));
+});
 
 // Status endpoint for the dashboard
 app.get("/status", (_req, res) => {
@@ -236,6 +247,14 @@ server.on("upgrade", (req, socket, head) => {
     return;
   }
 
+  if (pathname === "/output-media/ws") {
+    wssOutputMedia.handleUpgrade(req, socket, head, (ws) => {
+      wssOutputMedia.emit("headers", [], req);
+      wssOutputMedia.emit("connection", ws, req);
+    });
+    return;
+  }
+
   socket.destroy();
 });
 
@@ -261,6 +280,11 @@ const wssOutbound = new WebSocketServer({
 });
 
 const wssRecallRealtime = new WebSocketServer({
+  noServer: true,
+  perMessageDeflate: false,
+});
+
+const wssOutputMedia = new WebSocketServer({
   noServer: true,
   perMessageDeflate: false,
 });
@@ -333,6 +357,12 @@ wssRecallRealtime.on("headers", (_headers, req) => {
   );
 });
 
+wssOutputMedia.on("headers", (_headers, req) => {
+  console.log(
+    `[Bridge] Output media upgrade accepted path=/output-media/ws request=${JSON.stringify(summarizeUpgradeRequest(req))}`,
+  );
+});
+
 wssRecallRealtime.on("connection", (ws: WebSocket, req) => {
   console.log(
     `[Bridge] New Recall realtime WebSocket connection remote=${req.socket.remoteAddress ?? "unknown"} extensions=${ws.extensions || "none"}`,
@@ -356,6 +386,34 @@ wssRecallRealtime.on("connection", (ws: WebSocket, req) => {
 
   ws.on("error", (err) => {
     console.error(`[Bridge] Recall realtime WebSocket error: ${err.message}`);
+  });
+});
+
+wssOutputMedia.on("connection", (ws: WebSocket, req) => {
+  const requestedBotId = getBotIdFromUpgradeRequest(req);
+  const botId = requestedBotId ? outputMediaHub.resolveBotId(requestedBotId) : null;
+  if (!botId) {
+    console.warn("[Bridge] Rejecting output media WebSocket without resolvable botId");
+    ws.close(1008, "missing_bot_id");
+    return;
+  }
+
+  outputMediaHub.addClient(botId, ws);
+  meetingOrchestrator.handleOutputMediaConnection(botId, true);
+
+  console.log(
+    `[Bridge] Output media WebSocket connected for bot ${botId} remote=${req.socket.remoteAddress ?? "unknown"} clients=${outputMediaHub.clientCount(botId)}`,
+  );
+
+  ws.on("close", (code, reason) => {
+    meetingOrchestrator.handleOutputMediaConnection(botId, outputMediaHub.hasClients(botId));
+    console.log(
+      `[Bridge] Output media WebSocket closed for bot ${botId} code=${code} reason=${reason.toString() || "none"} remainingClients=${outputMediaHub.clientCount(botId)}`,
+    );
+  });
+
+  ws.on("error", (err) => {
+    console.error(`[Bridge] Output media WebSocket error for bot ${botId}: ${err.message}`);
   });
 });
 

@@ -56,14 +56,31 @@ export interface RecallAutomaticAudioOutputConfig {
   };
 }
 
+export interface RecallOutputMediaPageConfig {
+  url: string;
+}
+
+export interface RecallOutputMediaEndpoint {
+  kind: "webpage";
+  config: RecallOutputMediaPageConfig;
+}
+
+export interface RecallOutputMediaConfig {
+  camera?: RecallOutputMediaEndpoint;
+}
+
 export interface RecallBotConfig {
   meeting_url: string;
   bot_name?: string;
   recording_config?: {
     audio_mixed_raw?: Record<string, never>;
     realtime_endpoints?: RecallRealtimeEndpointConfig[];
+    include_bot_in_recording?: {
+      audio?: boolean;
+    };
   };
   automatic_audio_output?: RecallAutomaticAudioOutputConfig;
+  output_media?: RecallOutputMediaConfig;
   chat?: {
     on_bot_join?: {
       send_to: string;
@@ -109,6 +126,8 @@ export interface MeetingAudioSessionState {
   geminiSession: GeminiLiveSession;
   recallAudioConnected: boolean;
   geminiConnected: boolean;
+  outputMediaConnected: boolean;
+  outputMediaTurnStreaming: boolean;
   wakeActiveUntil: number;
   suppressIncomingAudioUntil: number;
   currentTurnActive: boolean;

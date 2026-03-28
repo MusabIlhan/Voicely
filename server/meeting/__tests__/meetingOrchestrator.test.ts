@@ -20,6 +20,13 @@ const { mockCreateBot, mockRemoveBot, mockSendAudio, statusCallbacks, geminiInst
     }>,
   }));
 
+const outputMediaHubMock = vi.hoisted(() => ({
+  hasClients: vi.fn(() => false),
+  broadcastAudio: vi.fn(),
+  clear: vi.fn(),
+  closeBot: vi.fn(),
+}));
+
 vi.mock("../webhooks.js", () => ({
   onStatusChange: vi.fn((cb: StatusCb) => {
     statusCallbacks.push(cb);
@@ -30,6 +37,10 @@ vi.mock("../recallClient.js", () => ({
   createBot: (...args: unknown[]) => mockCreateBot(...args),
   removeBot: (...args: unknown[]) => mockRemoveBot(...args),
   sendAudioToMeeting: (...args: unknown[]) => mockSendAudio(...args),
+}));
+
+vi.mock("../outputMediaHub.js", () => ({
+  outputMediaHub: outputMediaHubMock,
 }));
 
 vi.mock("../../gemini/liveClient.js", () => ({
@@ -88,6 +99,11 @@ describe("MeetingOrchestrator", () => {
     mockCreateBot.mockResolvedValue(botResponse());
     mockRemoveBot.mockResolvedValue(undefined);
     mockSendAudio.mockResolvedValue(undefined);
+    outputMediaHubMock.hasClients.mockReset();
+    outputMediaHubMock.broadcastAudio.mockReset();
+    outputMediaHubMock.clear.mockReset();
+    outputMediaHubMock.closeBot.mockReset();
+    outputMediaHubMock.hasClients.mockReturnValue(false);
 
     orch = new MeetingOrchestrator({ cooldownMs: 50 });
     await orch.joinMeeting("https://meet.google.com/abc");
@@ -230,6 +246,24 @@ describe("MeetingOrchestrator", () => {
     expect(mockSendAudio).not.toHaveBeenCalled();
   });
 
+  it("streams audio chunks to output media when connected", async () => {
+    outputMediaHubMock.hasClients.mockReturnValue(true);
+    orch.handleOutputMediaConnection("bot_123", true);
+
+    gemini.emit("inputTranscription", "Hey Assistant, can you hear me?");
+    gemini.emit("outputTranscription", "Yes.");
+    gemini.emit("audio", Buffer.alloc(4800));
+    gemini.emit("audio", Buffer.alloc(2400));
+    gemini.emit("turnComplete");
+
+    await vi.waitFor(() => {
+      expect(outputMediaHubMock.broadcastAudio).toHaveBeenCalledTimes(2);
+    });
+
+    expect(outputMediaHubMock.clear).toHaveBeenCalled();
+    expect(mockSendAudio).not.toHaveBeenCalled();
+  });
+
   it("updates session status from webhook callbacks", () => {
     statusCallbacks[0]("bot_123", "in_call");
     expect(orch.getSession("bot_123")?.status).toBe("in_call");
@@ -239,6 +273,7 @@ describe("MeetingOrchestrator", () => {
     await orch.leaveMeeting("bot_123");
     expect(mockRemoveBot).toHaveBeenCalledWith("bot_123");
     expect(gemini.close).toHaveBeenCalled();
+    expect(outputMediaHubMock.closeBot).toHaveBeenCalledWith("bot_123");
     expect(orch.getSession("bot_123")?.status).toBe("done");
   });
 });

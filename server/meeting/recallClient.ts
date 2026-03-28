@@ -1,8 +1,10 @@
 import { config } from "../config.js";
-import { createSilentMp3Base64, encodePcmToMp3Base64 } from "../audio/mp3.js";
+import { encodePcmToMp3Base64 } from "../audio/mp3.js";
 import type { RecallBotConfig, RecallBotResponse } from "./types.js";
+import { outputMediaHub } from "./outputMediaHub.js";
 
 const REALTIME_AUDIO_WEBSOCKET_PATH = "/webhooks/recall/realtime";
+const OUTPUT_MEDIA_PATH_PREFIX = "/output-media";
 const SILENT_AUDIO_SAMPLE_RATE = 24000;
 
 function apiUrl(path: string): string {
@@ -46,15 +48,25 @@ function getRealtimeWebsocketUrl(): string {
   return `${base.replace(/\/+$/, "")}${REALTIME_AUDIO_WEBSOCKET_PATH}`;
 }
 
+function getOutputMediaPageUrl(sessionToken: string): string {
+  const base = config.server.publicUrl.replace(/\/+$/, "");
+  return `${base}${OUTPUT_MEDIA_PATH_PREFIX}/${encodeURIComponent(sessionToken)}`;
+}
+
 export async function createBot(
   meetingUrl: string,
   botName?: string,
 ): Promise<RecallBotResponse> {
+  const requestedBotName = botName ?? "Voisli Assistant";
+  const outputMediaToken = outputMediaHub.createSessionToken();
   const body: RecallBotConfig = {
     meeting_url: meetingUrl,
-    bot_name: botName ?? "Voisli Assistant",
+    bot_name: requestedBotName,
     recording_config: {
       audio_mixed_raw: {},
+      include_bot_in_recording: {
+        audio: true,
+      },
       realtime_endpoints: [
         {
           type: "websocket",
@@ -67,11 +79,11 @@ export async function createBot(
         },
       ],
     },
-    automatic_audio_output: {
-      in_call_recording: {
-        data: {
-          kind: "mp3",
-          b64_data: createSilentMp3Base64(250, SILENT_AUDIO_SAMPLE_RATE),
+    output_media: {
+      camera: {
+        kind: "webpage",
+        config: {
+          url: getOutputMediaPageUrl(outputMediaToken),
         },
       },
     },
@@ -79,15 +91,19 @@ export async function createBot(
       on_bot_join: {
         send_to: "everyone",
         message:
-          "Hi! I'm Voisli, an AI meeting assistant. Say 'Hey Voisli' if you want me to help.",
+          "Hi! I'm Voisli, an AI meeting assistant. Say 'Hey Assistant' or 'Hey Yapper' if you want me to help.",
       },
     },
   };
 
-  return recallFetch<RecallBotResponse>("/bot/", {
+  const createdBot = await recallFetch<RecallBotResponse>("/bot/", {
     method: "POST",
     body: JSON.stringify(body),
   });
+
+  outputMediaHub.registerSessionToken(outputMediaToken, createdBot.id);
+
+  return createdBot;
 }
 
 export async function removeBot(botId: string): Promise<void> {

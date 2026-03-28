@@ -20,6 +20,7 @@ import {
 } from "../tools/schema.js";
 import { MEETING_ASSISTANT_PROMPT } from "../gemini/prompts.js";
 import { config } from "../config.js";
+import { outputMediaHub } from "./outputMediaHub.js";
 
 const DEFAULT_COOLDOWN_MS = 15_000;
 const WAKE_WINDOW_MS = 20_000;
@@ -33,6 +34,7 @@ const WAKE_ALIASES = [
   "yapr",
   "yappa",
   "assistant",
+  "assistent",
 ] as const;
 
 function meetingPrompt(): string {
@@ -177,6 +179,7 @@ function resetTurnState(state: MeetingAudioSessionState): void {
   state.currentTurnActive = false;
   state.currentTurnAccepted = false;
   state.currentTurnHadWakeWord = false;
+  state.outputMediaTurnStreaming = false;
   state.currentTurnInputTexts = [];
   state.currentTurnOutputTexts = [];
   state.currentTurnOutputAudio = [];
@@ -274,6 +277,18 @@ export class MeetingOrchestrator extends EventEmitter {
     return cm ? cm.getSummary() : "No session found.";
   }
 
+  handleOutputMediaConnection(botId: string, connected: boolean): void {
+    const state = this.audioSessions.get(botId);
+    if (!state) {
+      return;
+    }
+
+    state.outputMediaConnected = connected;
+    console.log(
+      `[MeetingOrchestrator] Output media ${connected ? "connected" : "disconnected"} for bot ${botId}`,
+    );
+  }
+
   handleRealtimeEvent(event: RecallRealtimeEvent): void {
     const botId = event.data.bot.id;
     const state = this.audioSessions.get(botId);
@@ -340,6 +355,8 @@ export class MeetingOrchestrator extends EventEmitter {
       geminiSession,
       recallAudioConnected: false,
       geminiConnected: false,
+      outputMediaConnected: false,
+      outputMediaTurnStreaming: false,
       wakeActiveUntil: 0,
       suppressIncomingAudioUntil: 0,
       currentTurnActive: false,
@@ -450,9 +467,23 @@ export class MeetingOrchestrator extends EventEmitter {
           now() + GENERATION_SUPPRESSION_MS,
         );
         state.currentTurnOutputAudio.push(audio);
-        console.log(
-          `[MeetingOrchestrator] Buffered Gemini audio for bot ${botId}: ${audio.length} bytes`,
-        );
+        if (outputMediaHub.hasClients(botId)) {
+          if (!state.outputMediaTurnStreaming) {
+            state.outputMediaTurnStreaming = true;
+            outputMediaHub.clear(botId);
+            console.log(
+              `[MeetingOrchestrator] Streaming live output audio to output media for bot ${botId}`,
+            );
+          }
+          outputMediaHub.broadcastAudio(botId, audio, BOT_AUDIO_SAMPLE_RATE);
+          console.log(
+            `[MeetingOrchestrator] Streamed Gemini audio chunk for bot ${botId}: ${audio.length} bytes`,
+          );
+        } else {
+          console.log(
+            `[MeetingOrchestrator] Buffered Gemini audio for bot ${botId}: ${audio.length} bytes`,
+          );
+        }
       } else {
         console.log(
           `[MeetingOrchestrator] Dropping Gemini audio before wake for bot ${botId}: ${audio.length} bytes`,
@@ -478,6 +509,17 @@ export class MeetingOrchestrator extends EventEmitter {
           err instanceof Error ? err : new Error(String(err)),
         );
       });
+    });
+
+    state.geminiSession.on("interrupted", () => {
+      if (!state.currentTurnAccepted) {
+        return;
+      }
+      outputMediaHub.clear(botId);
+      state.outputMediaTurnStreaming = false;
+      console.log(
+        `[MeetingOrchestrator] Cleared output media playback after interruption for bot ${botId}`,
+      );
     });
 
     state.geminiSession.on("error", (err: Error) => {
@@ -558,10 +600,16 @@ export class MeetingOrchestrator extends EventEmitter {
       const durationMs = Math.ceil(
         (pcm.length / 2 / BOT_AUDIO_SAMPLE_RATE) * 1000,
       );
-      console.log(
-        `[MeetingOrchestrator] Sending response audio to Recall for bot ${botId}: ${pcm.length} bytes durationMs=${durationMs}`,
-      );
-      await recallClient.sendAudioToMeeting(botId, pcm, BOT_AUDIO_SAMPLE_RATE);
+      if (outputMediaHub.hasClients(botId)) {
+        console.log(
+          `[MeetingOrchestrator] Completed live output media turn for bot ${botId}: ${pcm.length} bytes durationMs=${durationMs}`,
+        );
+      } else {
+        console.log(
+          `[MeetingOrchestrator] Output media unavailable, falling back to Recall output_audio for bot ${botId}: ${pcm.length} bytes durationMs=${durationMs}`,
+        );
+        await recallClient.sendAudioToMeeting(botId, pcm, BOT_AUDIO_SAMPLE_RATE);
+      }
       state.speaking = true;
       state.suppressIncomingAudioUntil = now() + durationMs + 750;
       this.lastResponseTime.set(botId, now());
@@ -606,6 +654,8 @@ export class MeetingOrchestrator extends EventEmitter {
       state.geminiSession.close();
       this.audioSessions.delete(botId);
     }
+
+    outputMediaHub.closeBot(botId);
 
     const session = this.sessions.get(botId);
     if (session) {

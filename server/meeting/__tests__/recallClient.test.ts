@@ -42,26 +42,29 @@ function jsonResponse(data: unknown, status = 200): Response {
 }
 
 describe("createBot", () => {
-  it("sends a POST request to /bot/ with the EU realtime audio payload", async () => {
+  it("creates the bot with output media configured in the initial EU realtime audio payload", async () => {
     const botResponse = {
       id: "bot_123",
       status_changes: [],
       meeting_url: "https://meet.google.com/abc-defg-hij",
     };
-    mockFetch.mockResolvedValue(jsonResponse(botResponse));
+    mockFetch.mockResolvedValueOnce(jsonResponse(botResponse));
 
     const result = await createBot("https://meet.google.com/abc-defg-hij");
 
-    const [url, opts] = mockFetch.mock.calls[0];
-    expect(url).toBe("https://eu-central-1.recall.ai/api/v1/bot/");
-    expect(opts.method).toBe("POST");
-    expect(opts.headers.Authorization).toBe("Token test_recall_key");
-    expect(opts.headers["Content-Type"]).toBe("application/json");
+    const [createUrl, createOpts] = mockFetch.mock.calls[0];
+    expect(createUrl).toBe("https://eu-central-1.recall.ai/api/v1/bot/");
+    expect(createOpts.method).toBe("POST");
+    expect(createOpts.headers.Authorization).toBe("Token test_recall_key");
+    expect(createOpts.headers["Content-Type"]).toBe("application/json");
 
-    const body = JSON.parse(opts.body);
+    const body = JSON.parse(createOpts.body);
     expect(body.meeting_url).toBe("https://meet.google.com/abc-defg-hij");
     expect(body.bot_name).toBe("Voisli Assistant");
     expect(body.recording_config.audio_mixed_raw).toEqual({});
+    expect(body.recording_config.include_bot_in_recording).toEqual({
+      audio: true,
+    });
     expect(body.recording_config.realtime_endpoints).toEqual([
       {
         type: "websocket",
@@ -73,11 +76,10 @@ describe("createBot", () => {
         ],
       },
     ]);
-    expect(body.automatic_audio_output.in_call_recording.data.kind).toBe("mp3");
-    expect(typeof body.automatic_audio_output.in_call_recording.data.b64_data).toBe(
-      "string",
+    expect(body.output_media.camera.kind).toBe("webpage");
+    expect(body.output_media.camera.config.url).toMatch(
+      /^https:\/\/test\.ngrok\.io\/output-media\/.+$/,
     );
-    expect(body.automatic_audio_output.in_call_recording.data.b64_data.length).toBeGreaterThan(0);
     expect(body.real_time_transcription).toBeUndefined();
     expect(body.transcription_options).toBeUndefined();
     expect(body.recording_mode).toBeUndefined();
@@ -86,7 +88,7 @@ describe("createBot", () => {
   });
 
   it("uses a custom bot name when provided", async () => {
-    mockFetch.mockResolvedValue(jsonResponse({ id: "bot_456" }));
+    mockFetch.mockResolvedValueOnce(jsonResponse({ id: "bot_456" }));
     await createBot("https://meet.google.com/test", "Custom Bot");
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
     expect(body.bot_name).toBe("Custom Bot");
