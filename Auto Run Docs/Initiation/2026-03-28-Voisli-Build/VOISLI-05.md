@@ -67,7 +67,7 @@ This is the final phase — polish the UI, add real-time updates so the dashboar
   - Add a health check endpoint `GET /health` that tests connectivity to all external services and reports their status
   - Update the dashboard status card to use the health endpoint
 
-- [ ] End-to-end testing and demo flow verification:
+- [x] End-to-end testing and demo flow verification:
   - Create `scripts/test-demo.sh` — a script that verifies all systems are ready:
     - Check that the bridge server is running and responds to `/health`
     - Check that all required environment variables are set

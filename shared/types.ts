@@ -94,6 +94,8 @@ export interface BridgeServerStatus {
     tools: number;
     resources: number;
   };
+  twilioNumber?: string;
+  publicServerUrl?: string;
 }
 
 // --- Health Check ---

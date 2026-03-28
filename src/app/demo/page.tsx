@@ -49,6 +49,11 @@ const MCP_TOOLS = [
 ];
 
 export default function DemoPage() {
+  // Onboarding
+  const [onboardingOpen, setOnboardingOpen] = useState(true);
+  const [ngrokUrl, setNgrokUrl] = useState<string | null>(null);
+  const [calendarReady, setCalendarReady] = useState(false);
+
   // Server status
   const [serverOnline, setServerOnline] = useState(false);
   const [twilioReady, setTwilioReady] = useState(false);
@@ -94,7 +99,9 @@ export default function DemoPage() {
           setServerOnline(true);
           setTwilioReady(data.configuredServices?.twilio ?? false);
           setGeminiReady(data.configuredServices?.gemini ?? false);
+          setCalendarReady(data.configuredServices?.calendar ?? false);
           setTwilioNumber(data.twilioNumber ?? null);
+          setNgrokUrl(data.publicServerUrl ?? null);
         } else {
           setServerOnline(false);
         }
@@ -328,6 +335,138 @@ export default function DemoPage() {
           <StatusPill label="Twilio" ready={twilioReady} />
           <StatusPill label="Gemini" ready={geminiReady} />
         </div>
+      </section>
+
+      {/* ── Onboarding: Connect Claude to Your Phone ────────────── */}
+      <section className="mb-8 glass-card rounded-xl animate-fade-in">
+        <button
+          onClick={() => setOnboardingOpen((v) => !v)}
+          className="flex w-full items-center justify-between px-5 py-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-accent-light">
+                <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177A7.547 7.547 0 016.648 6.61a.75.75 0 00-1.152.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 011.925-3.545 3.75 3.75 0 013.255 3.717z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                Connect Claude to Your Phone
+              </h2>
+              <p className="text-sm text-muted">
+                3 steps to give Claude a real phone number
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <OnboardingProgress
+              steps={[twilioReady, geminiReady, serverOnline && twilioReady && geminiReady]}
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className={`h-5 w-5 text-muted transition-transform duration-200 ${onboardingOpen ? "rotate-180" : ""}`}
+            >
+              <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z" clipRule="evenodd" />
+            </svg>
+          </div>
+        </button>
+
+        {onboardingOpen && (
+          <div className="border-t border-card-border/50 px-5 py-5 space-y-1">
+            {/* Step 1: Your Phone Number */}
+            <OnboardingStep
+              step={1}
+              title="Get a Phone Number"
+              done={twilioReady}
+            >
+              <p className="text-sm text-muted mb-3">
+                Claude needs a real phone number to make and receive calls. We use Twilio for this.
+              </p>
+              {twilioNumber ? (
+                <div className="rounded-lg border border-success/20 bg-success/5 p-4 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-success">
+                      <path fillRule="evenodd" d="M1.5 4.5a3 3 0 013-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 01-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 006.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 011.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 01-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs text-success font-medium">Claude&apos;s phone number</p>
+                    <p className="text-xl font-bold text-foreground tracking-wide">{twilioNumber}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-card-border bg-background p-3">
+                  <p className="text-xs text-muted/60">
+                    Sign up at <span className="text-accent-light">twilio.com</span>, get a phone number, and add credentials to <code className="text-accent-light">.env</code>
+                  </p>
+                </div>
+              )}
+            </OnboardingStep>
+
+            {/* Step 2: Connect Claude */}
+            <OnboardingStep
+              step={2}
+              title="Give Claude the Tools"
+              done={geminiReady}
+            >
+              <p className="text-sm text-muted mb-3">
+                Paste this config into Claude Desktop or Claude Code. One paste — Claude gets {MCP_TOOLS.length} new abilities.
+              </p>
+              <div className="relative rounded-lg border border-card-border bg-background p-3">
+                <button
+                  onClick={handleCopyConfig}
+                  className="absolute right-2 top-2 rounded-md bg-card-border/50 px-2 py-0.5 text-[10px] font-medium text-muted hover:text-foreground transition-colors"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+                <pre className="font-mono text-[11px] text-muted leading-relaxed overflow-x-auto pr-14">{MCP_CONFIG}</pre>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {MCP_TOOLS.slice(0, 4).map((tool) => (
+                  <code
+                    key={tool.name}
+                    className="rounded bg-accent/10 px-1.5 py-0.5 font-mono text-[10px] text-accent-light"
+                  >
+                    {tool.name}
+                  </code>
+                ))}
+                <span className="rounded bg-card-border/30 px-1.5 py-0.5 text-[10px] text-muted">
+                  +{MCP_TOOLS.length - 4} more
+                </span>
+              </div>
+            </OnboardingStep>
+
+            {/* Step 3: Try It */}
+            <OnboardingStep
+              step={3}
+              title="Try It"
+              done={serverOnline && twilioReady && geminiReady}
+              isLast
+            >
+              <p className="text-sm text-muted mb-3">
+                Pick up your phone and try either:
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <div className="flex-1 min-w-[200px] rounded-lg border border-card-border bg-background p-4">
+                  <p className="text-sm font-medium text-foreground mb-1">Call Claude</p>
+                  <p className="text-xs text-muted/60">
+                    Dial{" "}
+                    <code className="text-accent-light font-semibold">{twilioNumber ?? "the number above"}</code>{" "}
+                    from your phone. The AI picks up and talks to you.
+                  </p>
+                </div>
+                <div className="flex-1 min-w-[200px] rounded-lg border border-card-border bg-background p-4">
+                  <p className="text-sm font-medium text-foreground mb-1">Tell Claude to call</p>
+                  <p className="text-xs text-muted/60">
+                    In Claude, type: &ldquo;Call the restaurant at +1234567890 and book a table for 2 tonight at 7pm&rdquo;
+                  </p>
+                </div>
+              </div>
+            </OnboardingStep>
+          </div>
+        )}
       </section>
 
       {/* ── Demo Flow 1: Restaurant Reservation ──────────────────────── */}
@@ -728,6 +867,102 @@ function FlowStatusBadge({ status }: { status: DemoStatus }) {
       <span className={`h-1.5 w-1.5 rounded-full ${dots[status]}`} />
       {labels[status]}
     </span>
+  );
+}
+
+function OnboardingProgress({ steps }: { steps: boolean[] }) {
+  const done = steps.filter(Boolean).length;
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-xs text-muted tabular-nums">
+        {done}/{steps.length}
+      </span>
+      <div className="flex gap-0.5">
+        {steps.map((s, i) => (
+          <div
+            key={i}
+            className={`h-1.5 w-4 rounded-full transition-colors duration-300 ${
+              s ? "bg-success" : "bg-card-border"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OnboardingStep({
+  step,
+  title,
+  done,
+  isLast,
+  children,
+}: {
+  step: number;
+  title: string;
+  done: boolean;
+  isLast?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex gap-4">
+      {/* Timeline */}
+      <div className="flex flex-col items-center">
+        <div
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors duration-300 ${
+            done
+              ? "bg-success/20 text-success"
+              : "bg-card-border/50 text-muted"
+          }`}
+        >
+          {done ? (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            step
+          )}
+        </div>
+        {!isLast && (
+          <div
+            className={`w-px flex-1 my-1 transition-colors duration-300 ${
+              done ? "bg-success/30" : "bg-card-border/30"
+            }`}
+          />
+        )}
+      </div>
+      {/* Content */}
+      <div className={`pb-5 ${isLast ? "" : ""}`}>
+        <h3 className="text-sm font-semibold text-foreground mb-1.5">
+          {title}
+          {done && (
+            <span className="ml-2 text-[10px] font-medium text-success">
+              Connected
+            </span>
+          )}
+        </h3>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function StatusCheck({ label, ready }: { label: string; ready: boolean }) {
+  return (
+    <div className="flex items-center gap-1">
+      {ready ? (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-success">
+          <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 01.208 1.04l-5 7.5a.75.75 0 01-1.154.114l-3-3a.75.75 0 011.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 011.04-.207z" clipRule="evenodd" />
+        </svg>
+      ) : (
+        <span className="h-3.5 w-3.5 flex items-center justify-center">
+          <span className="h-1.5 w-1.5 rounded-full bg-muted/40" />
+        </span>
+      )}
+      <span className={`text-[11px] ${ready ? "text-success/80" : "text-muted/50"}`}>
+        {label}
+      </span>
+    </div>
   );
 }
 

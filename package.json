@@ -11,7 +11,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "mcp": "tsx server/mcp/index.ts"
+    "test:demo": "bash scripts/test-demo.sh",
+    "mcp": "tsx server/mcp/index.ts",
+    "start:bridge": "tsx server/index.ts"
   },
   "dependencies": {
     "@google/genai": "^1.46.0",

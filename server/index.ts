@@ -53,6 +53,8 @@ app.get("/status", (_req, res) => {
       tools: 8,
       resources: 5,
     },
+    twilioNumber: config.twilio.phoneNumber || undefined,
+    publicServerUrl: config.server.publicUrl || undefined,
   };
   res.json(status);
 });
