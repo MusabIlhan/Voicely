@@ -4,7 +4,7 @@ This phase turns Voisli into an MCP (Model Context Protocol) server, allowing Cl
 
 ## Tasks
 
-- [ ] Set up the MCP server infrastructure:
+- [x] Set up the MCP server infrastructure:
   - Install the MCP TypeScript SDK: `@modelcontextprotocol/sdk`
   - Create `server/mcp/` directory for all MCP-related code
   - Create `server/mcp/index.ts` — the MCP server entry point:

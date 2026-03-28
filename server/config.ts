@@ -26,6 +26,7 @@ export interface ServerConfig {
     publicUrl: string;
   };
   nextPublicBridgeServerUrl: string;
+  bridgeServerUrl: string;
 }
 
 export interface ServiceStatus {
@@ -79,6 +80,7 @@ export const config: ServerConfig = {
     "NEXT_PUBLIC_BRIDGE_SERVER_URL",
     "http://localhost:8080"
   ),
+  bridgeServerUrl: getEnv("BRIDGE_SERVER_URL", "http://localhost:8080"),
 };
 
 export function isConfigured(): ServiceStatus {
