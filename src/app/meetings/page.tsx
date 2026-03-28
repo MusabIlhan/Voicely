@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useServerEvents, type ServerEvent } from "@/hooks/useServerEvents";
 
 type MeetingBotStatus =
   | "creating"
@@ -34,25 +35,44 @@ export default function MeetingsPage() {
     message: string;
   } | null>(null);
 
-  useEffect(() => {
-    async function fetchMeetings() {
-      try {
-        const res = await fetch(`${BRIDGE_URL}/meetings`);
-        if (res.ok) {
-          const data = await res.json();
-          setSessions(data.sessions ?? []);
-        }
-      } catch {
-        // Bridge server not reachable
-      } finally {
-        setLoading(false);
+  const fetchMeetings = useCallback(async () => {
+    try {
+      const res = await fetch(`${BRIDGE_URL}/meetings`);
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data.sessions ?? []);
       }
+    } catch {
+      // Bridge server not reachable
+    } finally {
+      setLoading(false);
     }
-
-    fetchMeetings();
-    const id = setInterval(fetchMeetings, 5000);
-    return () => clearInterval(id);
   }, []);
+
+  // Real-time SSE updates for meeting events
+  const handleEvent = useCallback(
+    (event: ServerEvent) => {
+      if (
+        event.type === "meeting_joined" ||
+        event.type === "transcript_update" ||
+        event.type === "bot_spoke"
+      ) {
+        fetchMeetings();
+      }
+    },
+    [fetchMeetings]
+  );
+
+  const { status: sseStatus } = useServerEvents(handleEvent, {
+    eventTypes: ["meeting_joined", "transcript_update", "bot_spoke"],
+  });
+
+  useEffect(() => {
+    fetchMeetings();
+    // Fallback polling at reduced frequency (SSE handles real-time)
+    const id = setInterval(fetchMeetings, 30000);
+    return () => clearInterval(id);
+  }, [fetchMeetings]);
 
   async function handleJoinMeeting(e: React.FormEvent) {
     e.preventDefault();
@@ -106,6 +126,18 @@ export default function MeetingsPage() {
         </h1>
         <p className="mt-2 text-sm text-muted">
           Send an AI assistant to join and participate in Google Meet calls
+          <span className="ml-2 inline-flex items-center gap-1.5">
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                sseStatus === "connected"
+                  ? "bg-success animate-pulse-dot"
+                  : sseStatus === "connecting"
+                    ? "bg-warning animate-pulse-dot"
+                    : "bg-danger"
+              }`}
+            />
+            <span className="text-xs text-muted/60">{sseStatus}</span>
+          </span>
         </p>
       </section>
 

@@ -282,7 +282,7 @@ export default function DemoPage() {
     }
   }
 
-  // "Ask the Bot" simulation — adds a fake question + response to transcript
+  // "Ask the Bot" simulation — adds a fake question + delayed response to transcript
   function handleSimulateAsk() {
     if (!simQuestion.trim()) return;
     const now = new Date().toISOString();
@@ -291,16 +291,25 @@ export default function DemoPage() {
       text: `Hey Voisli, ${simQuestion.trim()}`,
       timestamp: now,
     };
-    const responseEntry: TranscriptEntry = {
-      speaker: "Voisli Bot",
-      text: "(Generating response...)",
-      timestamp: now,
-      isBotSpeech: true,
-    };
-    setTranscript((prev) => [...prev, questionEntry, responseEntry]);
+    setTranscript((prev) => [...prev, questionEntry]);
     setSimQuestion("");
     setBotSpeaking(true);
-    setTimeout(() => setBotSpeaking(false), 3000);
+
+    // Simulate a thinking delay, then add the bot response
+    setTimeout(() => {
+      const responseEntry: TranscriptEntry = {
+        speaker: "Voisli Bot",
+        text: "That's a great question. Let me look into that for you and get back with the details.",
+        timestamp: new Date().toISOString(),
+        isBotSpeech: true,
+      };
+      setTranscript((prev) => [...prev, responseEntry]);
+      setBotSpeaking(false);
+      setTimeout(() => {
+        transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
+    }, 2000);
+
     setTimeout(() => {
       transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 50);
