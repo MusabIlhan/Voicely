@@ -65,7 +65,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
     - Implements a cooldown to prevent the bot from responding too frequently
     - Stores meeting session data for post-meeting summary
 
-- [ ] Create API endpoints for meeting bot management and update the dashboard:
+- [x] Create API endpoints for meeting bot management and update the dashboard:
   - Add to `server/index.ts`:
     - `POST /meetings/join` — body: `{ meetingUrl, botName? }` — creates a Recall.ai bot and sends it to the meeting
     - `GET /meetings` — lists all meeting sessions (active and past)

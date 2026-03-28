@@ -9,6 +9,14 @@ vi.mock("../../config.js", () => ({
     googleCalendar: false,
     recall: false,
   })),
+  config: {
+    twilio: { accountSid: "", authToken: "", phoneNumber: "" },
+    gemini: { apiKey: "test-key" },
+    googleCalendar: { serviceAccountEmail: "", privateKey: "", calendarId: "" },
+    recall: { apiKey: "", apiBaseUrl: "https://us-west-2.recall.ai/api/v1" },
+    server: { port: 8080, host: "localhost", publicUrl: "" },
+    nextPublicBridgeServerUrl: "http://localhost:8080",
+  },
 }));
 
 vi.mock("../handlers/calendar.js", () => ({
@@ -27,6 +35,24 @@ vi.mock("../handlers/search.js", () => ({
     query: "test",
     location: "nearby",
   })),
+}));
+
+vi.mock("../../meeting/meetingOrchestrator.js", () => ({
+  meetingOrchestrator: {
+    joinMeeting: vi.fn(async (meetingUrl: string, botName?: string) => ({
+      botId: "bot_mock_123",
+      meetingUrl,
+      status: "creating",
+      participants: [],
+      startedAt: new Date(),
+      contextWindow: [],
+    })),
+    leaveMeeting: vi.fn(),
+    getSession: vi.fn(),
+    getAllSessions: vi.fn(() => []),
+    getTranscript: vi.fn(() => []),
+    getSummary: vi.fn(() => ""),
+  },
 }));
 
 import { executeToolCalls, registerToolHandler } from "../executor";
@@ -280,6 +306,40 @@ describe("executeToolCalls — parallel execution", () => {
     expect((results[0].response as Record<string, unknown>).error).toBe("API down");
     // Second call succeeded
     expect(((results[1].response as Record<string, unknown>).output as Record<string, unknown>).success).toBe(true);
+  });
+});
+
+describe("executeToolCalls — join_meeting", () => {
+  it("returns error when recall is not configured", async () => {
+    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: false, recall: false });
+
+    const calls: FunctionCall[] = [
+      { id: "jm1", name: "join_meeting", args: { meeting_url: "https://meet.google.com/abc-defg-hij" } },
+    ];
+
+    const [result] = await executeToolCalls(calls);
+    const output = (result.response as Record<string, unknown>).output as Record<string, unknown>;
+
+    expect(result.name).toBe("join_meeting");
+    expect(output.success).toBe(false);
+    expect(output.error).toContain("Recall.ai is not configured");
+  });
+
+  it("routes to meeting orchestrator when recall is configured", async () => {
+    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: false, recall: true });
+
+    const calls: FunctionCall[] = [
+      { id: "jm2", name: "join_meeting", args: { meeting_url: "https://meet.google.com/abc-defg-hij" } },
+    ];
+
+    const [result] = await executeToolCalls(calls);
+    const output = (result.response as Record<string, unknown>).output as Record<string, unknown>;
+
+    expect(result.name).toBe("join_meeting");
+    expect(output.success).toBe(true);
+    expect(output.bot_id).toBe("bot_mock_123");
+    expect(output.meeting_url).toBe("https://meet.google.com/abc-defg-hij");
+    expect((output.message as string)).toContain("joining the meeting");
   });
 });
 

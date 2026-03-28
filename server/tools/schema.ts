@@ -122,6 +122,28 @@ export const endCall: GeminiToolConfig = {
   },
 };
 
+export const joinMeeting: GeminiToolConfig = {
+  name: "join_meeting",
+  description:
+    "Send the Voisli AI assistant to join a Google Meet meeting",
+  parameters: {
+    type: "object",
+    properties: {
+      meeting_url: {
+        type: "string",
+        description:
+          "The Google Meet meeting URL to join (e.g. https://meet.google.com/abc-defg-hij)",
+      },
+      bot_name: {
+        type: "string",
+        description:
+          "Optional custom name for the meeting bot (defaults to 'Voisli Assistant')",
+      },
+    },
+    required: ["meeting_url"],
+  },
+};
+
 /** All tool schemas, ready to pass into GeminiConfig.tools */
 export const allToolSchemas: GeminiToolConfig[] = [
   checkCalendarAvailability,
@@ -129,4 +151,5 @@ export const allToolSchemas: GeminiToolConfig[] = [
   makeOutboundCall,
   searchBusiness,
   endCall,
+  joinMeeting,
 ];
