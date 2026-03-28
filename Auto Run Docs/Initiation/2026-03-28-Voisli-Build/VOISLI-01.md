@@ -97,7 +97,7 @@ Phone Call ← Twilio ← WebSocket (mulaw 8kHz) ← Bridge Server ← Gemini Li
     - Handle connection close and errors gracefully
     - Use an EventEmitter pattern or callback pattern so the orchestrator can plug in
 
-- [ ] Build the Gemini 3.1 Flash Live API client in `server/gemini/`:
+- [x] Build the Gemini 3.1 Flash Live API client in `server/gemini/`:
   - Create `server/gemini/liveClient.ts`:
     - Use the `@google/genai` SDK to establish a Gemini Live API session
     - Use the latest Gemini model that supports the Live/real-time multimodal API (check SDK docs — likely `gemini-2.0-flash-live-001` or newer). The model must support bidirectional audio streaming
