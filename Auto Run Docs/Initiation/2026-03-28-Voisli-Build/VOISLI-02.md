@@ -44,7 +44,7 @@ This phase adds intelligence to the voice assistant. Gemini 3.1 Flash Live suppo
   - Update `server/config.ts` to include Google Calendar configuration
   - Wire the calendar handlers into `server/tools/executor.ts`
 
-- [ ] Implement outbound calling capability via Twilio REST API:
+- [x] Implement outbound calling capability via Twilio REST API:
   - Create `server/twilio/outbound.ts`:
     - Implement `initiateOutboundCall(toNumber: string, purpose: string)`:
       - Use the Twilio REST API to create a new outbound call from the Voisli Twilio number

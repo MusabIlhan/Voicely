@@ -2,10 +2,15 @@
 
 export type CallStatus = "connecting" | "active" | "ended";
 
+export type CallDirection = "inbound" | "outbound";
+
 export interface CallSession {
   id: string;
   twilioCallSid: string;
   status: CallStatus;
+  direction: CallDirection;
+  purpose?: string;
+  outcome?: string;
   startedAt: Date;
   endedAt?: Date;
 }

@@ -5,6 +5,7 @@ import {
   createEvent,
   listUpcomingEvents,
 } from "./handlers/calendar.js";
+import { initiateOutboundCall } from "../twilio/outbound.js";
 
 /**
  * Handler function signature — takes parsed arguments, returns a result object.
@@ -111,12 +112,20 @@ registerToolHandler("create_calendar_event", async (args) => {
 
 registerToolHandler("make_outbound_call", async (args) => {
   console.log("[ToolExecutor] make_outbound_call called with:", args);
+  const result = await initiateOutboundCall(
+    args.phone_number as string,
+    args.purpose as string
+  );
   return {
-    success: false,
-    message:
-      "Outbound calling is not yet configured. This will be implemented in a later phase.",
-    phone_number: args.phone_number,
-    purpose: args.purpose,
+    success: result.success,
+    call_sid: result.callSid,
+    phone_number: result.toNumber,
+    from_number: result.fromNumber,
+    purpose: result.purpose,
+    message: result.success
+      ? `Outbound call initiated to ${result.toNumber}. Call SID: ${result.callSid}`
+      : `Failed to initiate call: ${result.error}`,
+    error: result.error,
   };
 });
 

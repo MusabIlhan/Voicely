@@ -5,11 +5,18 @@ import { GeminiLiveSession } from "./gemini/liveClient";
 import { twilioToGemini, geminiToTwilio } from "./audio/converter";
 import { executeToolCalls } from "./tools/executor";
 import { allToolSchemas } from "./tools/schema";
-import type { CallSession, CallStatus } from "../shared/types";
+import { getSystemPrompt, type CallContext } from "./gemini/prompts";
+import type { CallSession, CallStatus, CallDirection } from "../shared/types";
 
 // Minimum audio chunk size (in bytes) to send to Gemini.
 // Gemini Live API works best with chunks of at least ~4000 bytes of PCM 16kHz.
 const MIN_AUDIO_CHUNK_BYTES = 4000;
+
+export interface CallOrchestratorOptions {
+  direction?: CallDirection;
+  context?: CallContext;
+  purpose?: string;
+}
 
 export interface CallOrchestratorEvents {
   statusChange: (session: CallSession) => void;
@@ -24,18 +31,27 @@ export class CallOrchestrator extends EventEmitter {
   private audioBuffer: Buffer = Buffer.alloc(0);
   private cleanedUp = false;
 
-  constructor(twilioWs: WebSocket) {
+  constructor(twilioWs: WebSocket, options: CallOrchestratorOptions = {}) {
     super();
+
+    const direction = options.direction ?? "inbound";
+    const context = options.context ?? "inbound";
+    const systemInstruction = getSystemPrompt(context, options.purpose);
 
     this.session = {
       id: crypto.randomUUID(),
       twilioCallSid: "",
       status: "connecting",
+      direction,
+      purpose: options.purpose,
       startedAt: new Date(),
     };
 
     this.twilioStream = new TwilioMediaStream(twilioWs);
-    this.geminiSession = new GeminiLiveSession({ tools: allToolSchemas });
+    this.geminiSession = new GeminiLiveSession({
+      tools: allToolSchemas,
+      systemInstruction,
+    });
 
     this.wireUpTwilio();
     this.wireUpGemini();

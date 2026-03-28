@@ -43,14 +43,64 @@ app.get("/status", (_req, res) => {
 // Create HTTP server and WebSocket server
 const server = createServer(app);
 
-const wss = new WebSocketServer({ server, path: "/media-stream" });
+// Inbound call media stream
+const wssInbound = new WebSocketServer({ server, path: "/media-stream" });
 
-wss.on("connection", (ws) => {
-  console.log("[Bridge] New WebSocket connection on /media-stream");
-  const orchestrator = callManager.handleNewCall(ws);
+wssInbound.on("connection", (ws) => {
+  console.log("[Bridge] New inbound WebSocket connection on /media-stream");
+  const orchestrator = callManager.handleNewCall(ws, { direction: "inbound", context: "inbound" });
 
   orchestrator.on("error", (err) => {
-    console.error(`[Bridge] Call error: ${err.message}`);
+    console.error(`[Bridge] Inbound call error: ${err.message}`);
+  });
+});
+
+// Outbound call media stream
+const wssOutbound = new WebSocketServer({ server, path: "/media-stream-outbound" });
+
+wssOutbound.on("connection", (ws) => {
+  console.log("[Bridge] New outbound WebSocket connection on /media-stream-outbound");
+
+  // Twilio sends the custom parameters in the 'start' message.
+  // We need to listen for the first message to extract them, then hand off.
+  // The CallOrchestrator constructor wires up all listeners immediately,
+  // but we need the purpose before construction. We'll parse the first
+  // message ourselves then pass it.
+  let initialized = false;
+
+  ws.on("message", function onFirstMessage(data) {
+    if (initialized) return;
+
+    try {
+      const msg = JSON.parse(data.toString());
+      if (msg.event === "start") {
+        initialized = true;
+        ws.removeListener("message", onFirstMessage);
+
+        const params = msg.start?.customParameters ?? {};
+        const purpose = params.purpose ?? "";
+        const isReservation = purpose.toLowerCase().includes("reserv");
+        const context = isReservation ? "outbound_reservation" as const : "outbound_generic" as const;
+
+        // Re-emit this start message so the TwilioMediaStream also processes it
+        // We need to re-inject it. The simplest approach: create orchestrator
+        // then replay the message.
+        const orchestrator = callManager.handleNewCall(ws, {
+          direction: "outbound",
+          context,
+          purpose,
+        });
+
+        orchestrator.on("error", (err) => {
+          console.error(`[Bridge] Outbound call error: ${err.message}`);
+        });
+
+        // Replay the start message for the TwilioMediaStream handler
+        ws.emit("message", data);
+      }
+    } catch {
+      // Not a valid JSON message yet, ignore
+    }
   });
 });
 
@@ -87,10 +137,12 @@ server.listen(port, host, () => {
 function shutdown(signal: string) {
   console.log(`\n[Bridge] Received ${signal}, shutting down...`);
   callManager.closeAll();
-  wss.close(() => {
-    server.close(() => {
-      console.log("[Bridge] Server closed");
-      process.exit(0);
+  wssInbound.close(() => {
+    wssOutbound.close(() => {
+      server.close(() => {
+        console.log("[Bridge] Server closed");
+        process.exit(0);
+      });
     });
   });
   // Force exit after 5 seconds if graceful shutdown hangs
