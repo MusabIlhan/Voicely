@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import twilio from "twilio";
 import { config } from "../config";
 import { recordCallStatus, type CallStatusEvent } from "./outbound";
+import { voiceCoordinator } from "../voice/voiceCoordinator.js";
 
 const router = Router();
 
@@ -14,20 +15,18 @@ function getWsUrl(path: string): string {
 }
 
 /**
- * POST /twiml
- * Returns TwiML XML that greets the caller and opens a bidirectional
- * WebSocket media stream to the bridge server (inbound calls).
+ * POST /twiml/:sessionId
+ * Returns TwiML XML that opens a bidirectional WebSocket media stream for the session.
  */
-router.post("/twiml", (_req: Request, res: Response) => {
+router.post("/twiml/:sessionId", (req: Request, res: Response) => {
   try {
     const response = new VoiceResponse();
+    const sessionId = Array.isArray(req.params.sessionId) ? req.params.sessionId[0] : req.params.sessionId;
 
-    // Greet the caller before connecting to the AI stream
-    response.say("Connecting you to Voisli");
+    response.say("Connecting you now.");
 
-    // Open a bidirectional media stream to the bridge server
     const connect = response.connect();
-    connect.stream({ url: getWsUrl("/media-stream") });
+    connect.stream({ url: getWsUrl(`/media-stream/${encodeURIComponent(sessionId)}`) });
 
     res.type("text/xml");
     res.send(response.toString());
@@ -42,40 +41,12 @@ router.post("/twiml", (_req: Request, res: Response) => {
 });
 
 /**
- * POST /twiml/outbound
- * Returns TwiML for outbound calls. The `purpose` query parameter is passed
- * through as a custom parameter on the media stream so the orchestrator can
- * pick the right system prompt.
+ * POST /call-status/:sessionId
+ * Twilio sends status callbacks here for outbound calls and hangups.
  */
-router.post("/twiml/outbound", (req: Request, res: Response) => {
+router.post("/call-status/:sessionId", async (req: Request, res: Response) => {
   try {
-    const purpose = (req.query.purpose as string) ?? "";
-
-    const response = new VoiceResponse();
-
-    // Open a bidirectional media stream with custom parameters
-    const connect = response.connect();
-    const stream = connect.stream({ url: getWsUrl("/media-stream-outbound") });
-    stream.parameter({ name: "purpose", value: purpose });
-    stream.parameter({ name: "direction", value: "outbound" });
-
-    res.type("text/xml");
-    res.send(response.toString());
-  } catch (err) {
-    console.error(`[TwiML] Error generating outbound TwiML: ${err instanceof Error ? err.message : err}`);
-    const fallback = new VoiceResponse();
-    fallback.say("I'm sorry, we're experiencing technical difficulties with this call.");
-    res.type("text/xml");
-    res.send(fallback.toString());
-  }
-});
-
-/**
- * POST /call-status
- * Twilio sends status callbacks here for outbound calls.
- */
-router.post("/call-status", (req: Request, res: Response) => {
-  try {
+    const sessionId = Array.isArray(req.params.sessionId) ? req.params.sessionId[0] : req.params.sessionId;
     const event: CallStatusEvent = {
       callSid: req.body.CallSid ?? "",
       callStatus: req.body.CallStatus ?? "",
@@ -86,6 +57,12 @@ router.post("/call-status", (req: Request, res: Response) => {
     };
 
     recordCallStatus(event);
+    if (event.callSid) {
+      voiceCoordinator.updateTwilioCallReference(sessionId, event.callSid);
+    }
+    if (event.callStatus === "completed") {
+      await voiceCoordinator.handleTwilioTerminalEvent(sessionId, "twilio_completed_callback");
+    }
     res.sendStatus(204);
   } catch (err) {
     console.error(`[TwiML] Error processing call status: ${err instanceof Error ? err.message : err}`);

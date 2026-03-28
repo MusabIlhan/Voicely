@@ -2,8 +2,7 @@ import twilio from "twilio";
 import { GoogleGenAI } from "@google/genai";
 import { google } from "googleapis";
 import { config, isConfigured } from "./config";
-import { callManager } from "./callManager";
-import { meetingOrchestrator } from "./meeting/meetingOrchestrator";
+import { voiceCoordinator } from "./voice/voiceCoordinator";
 
 // ---------------------------------------------------------------------------
 // Health check module — tests connectivity to external services and reports
@@ -167,18 +166,18 @@ export async function runHealthCheck(): Promise<HealthCheckResponse> {
     overallStatus = "degraded";
   }
 
-  const activeSessions = meetingOrchestrator.getAllSessions();
+  const activeSessions = voiceCoordinator.getAllSessions();
   const activeMeetings = activeSessions.filter(
-    (s) =>
-      s.status === "creating" ||
-      s.status === "joining" ||
-      s.status === "in_call"
+    (session) => session.channel === "meeting" && session.status === "active"
+  ).length;
+  const activeCalls = activeSessions.filter(
+    (session) => session.channel === "phone" && session.status === "active"
   ).length;
 
   return {
     status: overallStatus,
     uptime: Math.floor((Date.now() - startTime) / 1000),
-    activeCalls: callManager.getCallCount(),
+    activeCalls,
     activeMeetings,
     services,
     timestamp: new Date().toISOString(),

@@ -20,6 +20,12 @@ export interface ServerConfig {
     apiKey: string;
     apiBaseUrl: string;
   };
+  mainAgent: {
+    baseUrl: string;
+    assistUrl: string;
+    sessionEndUrl: string;
+    bearerToken: string;
+  };
   server: {
     port: number;
     host: string;
@@ -70,6 +76,12 @@ export const config: ServerConfig = {
       "RECALL_API_BASE_URL",
       "https://us-west-2.recall.ai/api/v1"
     ),
+  },
+  mainAgent: {
+    baseUrl: getEnv("MAIN_AGENT_BASE_URL", "http://localhost:8090"),
+    assistUrl: getEnv("MAIN_AGENT_ASSIST_URL", `${getEnv("MAIN_AGENT_BASE_URL", "http://localhost:8090")}/assist`),
+    sessionEndUrl: getEnv("MAIN_AGENT_SESSION_END_URL", `${getEnv("MAIN_AGENT_BASE_URL", "http://localhost:8090")}/session-end`),
+    bearerToken: getEnv("MAIN_AGENT_BEARER_TOKEN"),
   },
   server: {
     port: parseInt(getEnv("BRIDGE_SERVER_PORT", "8080"), 10),

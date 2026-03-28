@@ -172,6 +172,7 @@ export default function CallsPage() {
 
 function ToolCallCard({ toolCall, index }: { toolCall: ToolCall; index: number }) {
   const toolIcons: Record<string, { icon: string; label: string }> = {
+    initiate_call: { icon: "Tel", label: "Initiated call" },
     check_calendar: { icon: "Cal", label: "Checked calendar" },
     create_calendar_event: { icon: "Evt", label: "Created event" },
     make_call: { icon: "Tel", label: "Made call" },

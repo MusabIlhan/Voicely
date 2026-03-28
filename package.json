@@ -9,6 +9,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "slides": "slidev slides.md",
+    "slides:build": "slidev build slides.md",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:demo": "bash scripts/test-demo.sh",
@@ -27,6 +29,8 @@
     "ws": "^8.20.0"
   },
   "devDependencies": {
+    "@slidev/cli": "^52.1.0",
+    "@slidev/theme-default": "^0.25.0",
     "@tailwindcss/postcss": "^4",
     "@types/express": "^5.0.6",
     "@types/node": "^20",

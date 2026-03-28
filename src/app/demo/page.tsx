@@ -38,14 +38,8 @@ const MCP_CONFIG = `{
 }`;
 
 const MCP_TOOLS = [
-  { name: "make_call", desc: "Initiate a phone call through the AI assistant" },
+  { name: "initiate_call", desc: "Initiate a phone call through the AI assistant" },
   { name: "join_meeting", desc: "Send a bot to join a video meeting" },
-  { name: "leave_meeting", desc: "Remove the bot from a meeting" },
-  { name: "check_calendar", desc: "Check calendar availability" },
-  { name: "create_calendar_event", desc: "Create a new calendar event" },
-  { name: "get_call_status", desc: "Check status of a phone call" },
-  { name: "get_meeting_summary", desc: "Get AI summary of a meeting" },
-  { name: "get_meeting_transcript", desc: "Get full meeting transcript" },
 ];
 
 export default function DemoPage() {
@@ -443,7 +437,7 @@ TWILIO_PHONE_NUMBER=+1xxxxxxxxxx`}</pre>
               done={geminiReady}
             >
               <p className="text-sm text-muted mb-3">
-                Add the Voisli MCP server so Claude can make calls, join meetings, and manage your calendar.
+                Add the Voisli MCP server so Claude can initiate calls, join meetings, and inspect read-only session resources.
               </p>
               <div className="rounded-lg border border-card-border bg-background p-3 space-y-1.5">
                 <p className="text-xs font-medium text-foreground/80">
@@ -452,10 +446,9 @@ TWILIO_PHONE_NUMBER=+1xxxxxxxxxx`}</pre>
                 <pre className="font-mono text-[11px] text-muted leading-relaxed overflow-x-auto">{MCP_CONFIG}</pre>
               </div>
               <p className="mt-2 text-xs text-muted/60">
-                Once connected, Claude can use <span className="text-accent-light">{MCP_TOOLS.length} tools</span> including{" "}
-                <code className="text-accent-light">make_call</code>,{" "}
-                <code className="text-accent-light">join_meeting</code>, and{" "}
-                <code className="text-accent-light">check_calendar</code>
+                Once connected, Claude can use <span className="text-accent-light">{MCP_TOOLS.length} tools</span>:{" "}
+                <code className="text-accent-light">initiate_call</code> and{" "}
+                <code className="text-accent-light">join_meeting</code>
               </p>
               <div className="mt-3">
                 <StatusCheck label="AI model connected" ready={geminiReady} />

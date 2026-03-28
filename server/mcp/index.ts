@@ -9,8 +9,8 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerTools } from "./tools.js";
 import { registerResources } from "./resources.js";
+import { registerTools } from "./tools.js";
 
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
@@ -21,7 +21,7 @@ const server = new McpServer({
   version: pkg.version,
 });
 
-// Register all tools and resources
+// Register the active voice tools only.
 registerTools(server);
 registerResources(server);
 

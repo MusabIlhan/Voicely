@@ -121,15 +121,15 @@ describe("voisli://calls/active resource", () => {
     resources = captureResources();
   });
 
-  it("filters for in-progress and ringing calls", async () => {
+  it("filters for connecting and active calls", async () => {
     mockCallBridgeAPI.mockResolvedValue({
       ok: true,
       status: 200,
       data: {
         calls: [
-          { sid: "CA1", status: "in-progress" },
-          { sid: "CA2", status: "completed" },
-          { sid: "CA3", status: "ringing" },
+          { sid: "CA1", status: "active" },
+          { sid: "CA2", status: "ended" },
+          { sid: "CA3", status: "connecting" },
           { sid: "CA4", status: "failed" },
         ],
       },
@@ -219,14 +219,14 @@ describe("voisli://meetings/active resource", () => {
     resources = captureResources();
   });
 
-  it("filters for listening and joining sessions", async () => {
+  it("filters for in-call, creating, and joining sessions", async () => {
     mockCallBridgeAPI.mockResolvedValue({
       ok: true,
       status: 200,
       data: {
         sessions: [
-          { botId: "B1", status: "listening" },
-          { botId: "B2", status: "ended" },
+          { botId: "B1", status: "in_call" },
+          { botId: "B2", status: "done" },
           { botId: "B3", status: "joining" },
         ],
       },
