@@ -9,6 +9,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "slides": "slidev slides.md",
+    "slides:build": "slidev build slides.md",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:demo": "bash scripts/test-demo.sh",
@@ -32,6 +34,8 @@
     "ws": "^8.20.0"
   },
   "devDependencies": {
+    "@slidev/cli": "^52.1.0",
+    "@slidev/theme-default": "^0.25.0",
     "@tailwindcss/postcss": "^4",
     "@types/express": "^5.0.6",
     "@types/node": "^20",
@@ -42,6 +46,7 @@
     "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "playwright-chromium": "^1.58.2",
     "supertest": "^7.2.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",

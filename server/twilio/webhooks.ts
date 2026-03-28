@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import twilio from "twilio";
 import { config } from "../config";
 import { recordCallStatus, type CallStatusEvent } from "./outbound";
+import { voiceCoordinator } from "../voice/voiceCoordinator.js";
 
 const router = Router();
 
@@ -13,17 +14,22 @@ function getWsUrl(path: string): string {
     : `wss://${config.server.host}:${config.server.port}${path}`;
 }
 
-function sendInboundTwiml(_req: Request, res: Response): void {
+function sendSessionTwiml(req: Request, res: Response): void {
   try {
+    const sessionId = Array.isArray(req.params.sessionId) ? req.params.sessionId[0] : req.params.sessionId;
+    if (!sessionId) {
+      res.status(400).type("text/xml").send("<Response><Say>Missing session.</Say></Response>");
+      return;
+    }
+
     console.log(
-      `[TwiML] Building inbound TwiML with websocket url=${getWsUrl("/media-stream")}`,
+      `[TwiML] Building session TwiML session=${sessionId} websocket url=${getWsUrl(`/media-stream/${encodeURIComponent(sessionId)}`)}`,
     );
 
     const response = new VoiceResponse();
-    response.say("Connecting you to Yapper");
-
+    response.say("Connecting you now.");
     const connect = response.connect();
-    connect.stream({ url: getWsUrl("/media-stream") });
+    connect.stream({ url: getWsUrl(`/media-stream/${encodeURIComponent(sessionId)}`) });
 
     res.type("text/xml");
     res.send(response.toString());
@@ -40,45 +46,16 @@ function sendInboundTwiml(_req: Request, res: Response): void {
   }
 }
 
-router.route("/twiml").get(sendInboundTwiml).post(sendInboundTwiml);
-
-function sendOutboundTwiml(req: Request, res: Response): void {
+async function handleCallStatus(req: Request, res: Response): Promise<void> {
   try {
-    const purpose = (req.query.purpose as string) ?? "";
+    const sessionId = Array.isArray(req.params.sessionId) ? req.params.sessionId[0] : req.params.sessionId;
+    if (!sessionId) {
+      res.sendStatus(204);
+      return;
+    }
+
     console.log(
-      `[TwiML] Building outbound TwiML purpose=${JSON.stringify(purpose)} websocket url=${getWsUrl("/media-stream-outbound")}`,
-    );
-
-    const response = new VoiceResponse();
-    const connect = response.connect();
-    const stream = connect.stream({ url: getWsUrl("/media-stream-outbound") });
-    stream.parameter({ name: "purpose", value: purpose });
-    stream.parameter({ name: "direction", value: "outbound" });
-
-    res.type("text/xml");
-    res.send(response.toString());
-  } catch (err) {
-    console.error(
-      `[TwiML] Error generating outbound TwiML: ${err instanceof Error ? err.message : err}`,
-    );
-    const fallback = new VoiceResponse();
-    fallback.say(
-      "I'm sorry, we're experiencing technical difficulties with this call.",
-    );
-    res.type("text/xml");
-    res.send(fallback.toString());
-  }
-}
-
-router
-  .route("/twiml/outbound")
-  .get(sendOutboundTwiml)
-  .post(sendOutboundTwiml);
-
-function handleCallStatus(req: Request, res: Response): void {
-  try {
-    console.log(
-      `[Twilio] Call status callback sid=${req.body.CallSid ?? "unknown"} status=${req.body.CallStatus ?? "unknown"} direction=${req.body.Direction ?? "unknown"}`,
+      `[Twilio] Call status callback session=${sessionId} sid=${req.body.CallSid ?? "unknown"} status=${req.body.CallStatus ?? "unknown"} direction=${req.body.Direction ?? "unknown"}`,
     );
 
     const event: CallStatusEvent = {
@@ -91,6 +68,12 @@ function handleCallStatus(req: Request, res: Response): void {
     };
 
     recordCallStatus(event);
+    if (event.callSid) {
+      voiceCoordinator.updateTwilioCallReference(sessionId, event.callSid);
+    }
+    if (event.callStatus === "completed") {
+      await voiceCoordinator.handleTwilioTerminalEvent(sessionId, "twilio_completed_callback");
+    }
     res.sendStatus(204);
   } catch (err) {
     console.error(
@@ -100,6 +83,7 @@ function handleCallStatus(req: Request, res: Response): void {
   }
 }
 
-router.route("/call-status").get(handleCallStatus).post(handleCallStatus);
+router.route("/twiml/:sessionId").get(sendSessionTwiml).post(sendSessionTwiml);
+router.route("/call-status/:sessionId").get(handleCallStatus).post(handleCallStatus);
 
 export default router;

@@ -21,9 +21,21 @@ export interface ServerConfig {
     clientId: string;
     clientSecret: string;
   };
+  googleWorkspace: {
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    tokenStorePath: string;
+  };
   recall: {
     apiKey: string;
     apiBaseUrl: string;
+  };
+  mainAgent: {
+    baseUrl: string;
+    assistUrl: string;
+    sessionEndUrl: string;
+    bearerToken: string;
   };
   server: {
     port: number;
@@ -38,6 +50,7 @@ export interface ServiceStatus {
   twilio: boolean;
   gemini: boolean;
   googleCalendar: boolean;
+  googleWorkspaceOAuth?: boolean;
   recall: boolean;
 }
 
@@ -54,6 +67,16 @@ function isPlaceholder(value: string): boolean {
     value.startsWith("https://your-")
   );
 }
+
+const serverPort = parseInt(getEnv("PORT", getEnv("BRIDGE_SERVER_PORT", "8080")), 10);
+const serverHost = getEnv(
+  "BRIDGE_SERVER_HOST",
+  process.env.PORT ? "0.0.0.0" : "localhost"
+);
+const bridgeServerHost =
+  serverHost === "0.0.0.0" || serverHost === "::" ? "127.0.0.1" : serverHost;
+const defaultBridgeServerUrl = `http://${bridgeServerHost}:${serverPort}`;
+const defaultWorkspaceRedirectUri = `http://${bridgeServerHost}:${serverPort}/auth/google/workspace/callback`;
 
 export const config: ServerConfig = {
   twilio: {
@@ -74,6 +97,12 @@ export const config: ServerConfig = {
     clientId: getEnv("GOOGLE_CLIENT_ID"),
     clientSecret: getEnv("GOOGLE_CLIENT_SECRET"),
   },
+  googleWorkspace: {
+    clientId: getEnv("GOOGLE_WORKSPACE_CLIENT_ID", getEnv("GOOGLE_CLIENT_ID")),
+    clientSecret: getEnv("GOOGLE_WORKSPACE_CLIENT_SECRET", getEnv("GOOGLE_CLIENT_SECRET")),
+    redirectUri: getEnv("GOOGLE_OAUTH_REDIRECT_URI", defaultWorkspaceRedirectUri),
+    tokenStorePath: getEnv("GOOGLE_WORKSPACE_TOKEN_STORE_PATH", ".data/google-workspace-tokens.json"),
+  },
   recall: {
     apiKey: getEnv("RECALL_API_KEY"),
     apiBaseUrl: getEnv(
@@ -81,16 +110,22 @@ export const config: ServerConfig = {
       "https://eu-central-1.recall.ai/api/v1"
     ),
   },
+  mainAgent: {
+    baseUrl: getEnv("MAIN_AGENT_BASE_URL", "http://localhost:8090"),
+    assistUrl: getEnv("MAIN_AGENT_ASSIST_URL", `${getEnv("MAIN_AGENT_BASE_URL", "http://localhost:8090")}/assist`),
+    sessionEndUrl: getEnv("MAIN_AGENT_SESSION_END_URL", `${getEnv("MAIN_AGENT_BASE_URL", "http://localhost:8090")}/session-end`),
+    bearerToken: getEnv("MAIN_AGENT_BEARER_TOKEN"),
+  },
   server: {
-    port: parseInt(getEnv("PORT", getEnv("BRIDGE_SERVER_PORT", "8080")), 10),
-    host: getEnv("BRIDGE_SERVER_HOST", "0.0.0.0"),
+    port: serverPort,
+    host: serverHost,
     publicUrl: getEnv("PUBLIC_SERVER_URL"),
   },
   nextPublicBridgeServerUrl: getEnv(
     "NEXT_PUBLIC_BRIDGE_SERVER_URL",
     "http://localhost:8080",
   ),
-  bridgeServerUrl: getEnv("BRIDGE_SERVER_URL", "http://localhost:8080"),
+  bridgeServerUrl: getEnv("BRIDGE_SERVER_URL", defaultBridgeServerUrl),
 };
 
 export function isConfigured(): ServiceStatus {
@@ -103,6 +138,10 @@ export function isConfigured(): ServiceStatus {
     googleCalendar:
       !isPlaceholder(config.googleCalendar.serviceAccountEmail) &&
       !isPlaceholder(config.googleCalendar.privateKey),
+    googleWorkspaceOAuth:
+      !isPlaceholder(config.googleWorkspace.clientId) &&
+      !isPlaceholder(config.googleWorkspace.clientSecret) &&
+      !isPlaceholder(config.googleWorkspace.redirectUri),
     recall: !isPlaceholder(config.recall.apiKey),
   };
 }

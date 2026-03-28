@@ -38,7 +38,7 @@ export function registerResources(server: McpServer, callBridgeAPI: BridgeAPIFn)
       );
       const allCalls = res.data?.calls ?? [];
       const active = allCalls.filter(
-        (c) => c.status === "in-progress" || c.status === "ringing"
+        (c) => c.status === "connecting" || c.status === "active"
       );
       return {
         contents: [
@@ -92,7 +92,7 @@ export function registerResources(server: McpServer, callBridgeAPI: BridgeAPIFn)
       );
       const allSessions = res.data?.sessions ?? [];
       const active = allSessions.filter(
-        (s) => s.status === "listening" || s.status === "joining"
+        (s) => s.status === "joining" || s.status === "in_call" || s.status === "creating"
       );
       return {
         contents: [

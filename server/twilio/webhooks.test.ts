@@ -1,87 +1,104 @@
-import express from "express";
-import request from "supertest";
+import { EventEmitter } from "events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { handleTwilioTerminalEvent, updateTwilioCallReference } = vi.hoisted(() => ({
+  handleTwilioTerminalEvent: vi.fn().mockResolvedValue(undefined),
+  updateTwilioCallReference: vi.fn(),
+}));
+
+vi.mock("../voice/voiceCoordinator.js", () => ({
+  voiceCoordinator: {
+    handleTwilioTerminalEvent,
+    updateTwilioCallReference,
+  },
+}));
+
 import router from "./webhooks";
 
-const { recordCallStatusMock } = vi.hoisted(() => ({
-  recordCallStatusMock: vi.fn(),
-}));
+async function dispatch(
+  method: string,
+  url: string,
+  body?: Record<string, unknown>
+): Promise<{ statusCode: number; text: string }> {
+  return await new Promise((resolve, reject) => {
+    const req = Object.assign(new EventEmitter(), {
+      method,
+      url,
+      originalUrl: url,
+      body: body ?? {},
+      headers: {},
+    });
 
-vi.mock("./outbound", () => ({
-  recordCallStatus: recordCallStatusMock,
-}));
+    let statusCode = 200;
+    let text = "";
+    let finished = false;
 
-function createApp() {
-  const app = express();
-  app.use(express.urlencoded({ extended: false }));
-  app.use(express.json());
-  app.use(router);
-  return app;
+    const finish = () => {
+      if (finished) {
+        return;
+      }
+
+      finished = true;
+      resolve({ statusCode, text });
+    };
+
+    const res = {
+      type: vi.fn(() => res),
+      status: vi.fn((code: number) => {
+        statusCode = code;
+        return res;
+      }),
+      send: vi.fn((payload?: string) => {
+        if (payload) {
+          text = payload;
+        }
+        finish();
+        return res;
+      }),
+      sendStatus: vi.fn((code: number) => {
+        statusCode = code;
+        finish();
+        return res;
+      }),
+    };
+
+    (router as unknown as { handle: Function }).handle(req as never, res as never, (error?: unknown) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      finish();
+    });
+  });
 }
 
 describe("Twilio webhooks", () => {
   beforeEach(() => {
-    recordCallStatusMock.mockReset();
+    vi.clearAllMocks();
   });
 
-  describe("/twiml", () => {
-    it("returns inbound TwiML for GET requests", async () => {
-      const app = createApp();
-      const res = await request(app).get("/twiml").expect(200);
+  it("renders session-specific TwiML media stream URLs for POST requests", async () => {
+    const response = await dispatch("POST", "/twiml/session-123");
 
-      expect(res.type).toMatch(/text\/xml/);
-      expect(res.text).toContain("<Say>Connecting you to Yapper</Say>");
-      expect(res.text).toContain('url="wss://');
-      expect(res.text).toContain("/media-stream");
-    });
-
-    it("returns inbound TwiML for POST requests", async () => {
-      const app = createApp();
-      const res = await request(app).post("/twiml").expect(200);
-
-      expect(res.text).toContain("<Response>");
-      expect(res.text).toContain("/media-stream");
-    });
+    expect(response.statusCode).toBe(200);
+    expect(response.text).toContain("/media-stream/session-123");
   });
 
-  describe("/twiml/outbound", () => {
-    it("returns outbound TwiML for GET requests", async () => {
-      const app = createApp();
-      const res = await request(app)
-        .get("/twiml/outbound?purpose=make%20reservation")
-        .expect(200);
+  it("renders session-specific TwiML media stream URLs for GET requests", async () => {
+    const response = await dispatch("GET", "/twiml/session-123");
 
-      expect(res.type).toMatch(/text\/xml/);
-      expect(res.text).toContain("/media-stream-outbound");
-      expect(res.text).toContain('name="purpose"');
-      expect(res.text).toContain("make reservation");
-    });
+    expect(response.statusCode).toBe(200);
+    expect(response.text).toContain("/media-stream/session-123");
   });
 
-  describe("/call-status", () => {
-    it("records status updates sent as POST", async () => {
-      const app = createApp();
-
-      await request(app)
-        .post("/call-status")
-        .type("form")
-        .send({
-          CallSid: "CA123",
-          CallStatus: "ringing",
-          Direction: "outbound-api",
-          To: "+123",
-          From: "+456",
-        })
-        .expect(204);
-
-      expect(recordCallStatusMock).toHaveBeenCalledTimes(1);
-      expect(recordCallStatusMock.mock.calls[0][0]).toMatchObject({
-        callSid: "CA123",
-        callStatus: "ringing",
-        direction: "outbound-api",
-        to: "+123",
-        from: "+456",
-      });
+  it("treats completed status callbacks as terminal events", async () => {
+    const response = await dispatch("POST", "/call-status/session-123", {
+      CallSid: "CA123",
+      CallStatus: "completed",
     });
+
+    expect(response.statusCode).toBe(204);
+    expect(handleTwilioTerminalEvent).toHaveBeenCalledWith("session-123", "twilio_completed_callback");
   });
 });

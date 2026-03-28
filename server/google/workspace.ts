@@ -16,7 +16,10 @@ async function getWorkspaceAuth(context?: ToolExecutionContext) {
     throw new Error(resolution.error ?? "No Google Workspace account is available.");
   }
 
-  return resolution;
+  return {
+    client: resolution.client,
+    account: resolution.account,
+  };
 }
 
 function escapeDriveQuery(value: string): string {

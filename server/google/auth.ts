@@ -57,7 +57,7 @@ async function writeStore(store: GoogleWorkspaceStoreData): Promise<void> {
 }
 
 function workspaceAuthConfigured(): boolean {
-  return isConfigured().googleWorkspaceOAuth;
+  return Boolean(isConfigured().googleWorkspaceOAuth);
 }
 
 function createOAuth2Client(tokens?: Credentials) {

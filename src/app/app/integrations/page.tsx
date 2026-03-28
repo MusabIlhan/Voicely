@@ -31,74 +31,21 @@ const MCP_CONFIG = JSON.stringify(
 
 const TOOLS = [
   {
-    name: "make_call",
+    name: "initiate_call",
     description:
-      "Initiate a phone call through Yapper. The AI voice assistant will call the given number and follow the provided purpose/instructions.",
+      "Initiate a phone call through Voisli for a caller-supplied session ID.",
     inputs: [
       { name: "phone_number", type: "string", required: true, desc: "Phone number to call (E.164 format)" },
-      { name: "purpose", type: "string", required: true, desc: "Why you are calling" },
-      { name: "instructions", type: "string", required: false, desc: "Additional instructions for the AI" },
+      { name: "session_id", type: "string", required: true, desc: "Stable session identifier used across the runtime" },
     ],
   },
   {
     name: "join_meeting",
     description:
-      "Send the Yapper bot to join a video meeting (Zoom, Google Meet, Teams, etc.).",
+      "Send the Voisli bot to join a video meeting for a caller-supplied session ID.",
     inputs: [
       { name: "meeting_url", type: "string", required: true, desc: "Full meeting URL" },
-      { name: "bot_name", type: "string", required: false, desc: "Display name for the bot (default: Yapper)" },
-    ],
-  },
-  {
-    name: "leave_meeting",
-    description: "Remove the Yapper bot from a meeting.",
-    inputs: [
-      { name: "bot_id", type: "string", required: true, desc: "The bot ID returned when the bot joined" },
-    ],
-  },
-  {
-    name: "check_calendar",
-    description:
-      "Check calendar availability for a given date and optional time range.",
-    inputs: [
-      { name: "date", type: "string", required: true, desc: "Date to check (YYYY-MM-DD)" },
-      { name: "time_start", type: "string", required: false, desc: "Start of time range (HH:MM, 24-hour)" },
-      { name: "time_end", type: "string", required: false, desc: "End of time range (HH:MM, 24-hour)" },
-    ],
-  },
-  {
-    name: "create_calendar_event",
-    description: "Create a new calendar event.",
-    inputs: [
-      { name: "title", type: "string", required: true, desc: "Event title" },
-      { name: "date", type: "string", required: true, desc: "Event date (YYYY-MM-DD)" },
-      { name: "time_start", type: "string", required: true, desc: "Start time (HH:MM, 24-hour)" },
-      { name: "time_end", type: "string", required: true, desc: "End time (HH:MM, 24-hour)" },
-      { name: "description", type: "string", required: false, desc: "Event description" },
-      { name: "location", type: "string", required: false, desc: "Event location" },
-    ],
-  },
-  {
-    name: "get_call_status",
-    description:
-      "Check the status of an ongoing or recent phone call.",
-    inputs: [
-      { name: "call_sid", type: "string", required: true, desc: "The call SID returned when the call was initiated" },
-    ],
-  },
-  {
-    name: "get_meeting_summary",
-    description:
-      "Get an AI-generated summary of a meeting with transcript highlights and action items.",
-    inputs: [
-      { name: "bot_id", type: "string", required: true, desc: "The bot ID returned when the bot joined" },
-    ],
-  },
-  {
-    name: "get_meeting_transcript",
-    description: "Get the full speaker-attributed transcript of a meeting.",
-    inputs: [
-      { name: "bot_id", type: "string", required: true, desc: "The bot ID returned when the bot joined" },
+      { name: "session_id", type: "string", required: true, desc: "Stable session identifier used across the runtime" },
     ],
   },
 ];
@@ -107,7 +54,7 @@ const RESOURCES = [
   {
     uri: "voisli://status",
     name: "Server Status",
-    description: "Bridge server status — active calls, active meetings, uptime, and configured services.",
+    description: "Read-only voice runtime status and service health snapshot.",
   },
   {
     uri: "voisli://calls/active",
@@ -328,7 +275,7 @@ export default function IntegrationsPage() {
               Test Connection
             </h2>
             <p className="mt-1 text-sm text-muted">
-              Verify the bridge server is reachable from the MCP server
+              Verify the voice runtime is reachable from the MCP server
             </p>
           </div>
           <button

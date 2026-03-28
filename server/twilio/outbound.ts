@@ -4,9 +4,10 @@ import { config, isConfigured } from "../config";
 export interface OutboundCallResult {
   success: boolean;
   callSid?: string;
+  sessionId?: string;
   toNumber: string;
   fromNumber: string;
-  purpose: string;
+  purpose?: string;
   error?: string;
 }
 
@@ -32,14 +33,14 @@ const callStatuses = new Map<string, CallStatusEvent[]>();
  */
 export async function initiateOutboundCall(
   toNumber: string,
-  purpose: string
+  sessionId: string
 ): Promise<OutboundCallResult> {
   if (!isConfigured().twilio) {
     return {
       success: false,
+      sessionId,
       toNumber,
       fromNumber: config.twilio.phoneNumber || "not_configured",
-      purpose,
       error:
         "Twilio is not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER in your .env file.",
     };
@@ -48,9 +49,9 @@ export async function initiateOutboundCall(
   if (!config.server.publicUrl || config.server.publicUrl.startsWith("https://your-")) {
     return {
       success: false,
+      sessionId,
       toNumber,
       fromNumber: config.twilio.phoneNumber,
-      purpose,
       error:
         "PUBLIC_SERVER_URL is not configured. Twilio needs a public URL for TwiML and status callbacks.",
     };
@@ -58,8 +59,8 @@ export async function initiateOutboundCall(
 
   const client = twilio(config.twilio.accountSid, config.twilio.authToken);
 
-  const twimlUrl = `${config.server.publicUrl}/twiml/outbound?purpose=${encodeURIComponent(purpose)}`;
-  const statusCallbackUrl = `${config.server.publicUrl}/call-status`;
+  const twimlUrl = `${config.server.publicUrl}/twiml/${encodeURIComponent(sessionId)}`;
+  const statusCallbackUrl = `${config.server.publicUrl}/call-status/${encodeURIComponent(sessionId)}`;
 
   try {
     const call = await client.calls.create({
@@ -71,25 +72,25 @@ export async function initiateOutboundCall(
       statusCallbackMethod: "POST",
     });
 
-    console.log(
-      `[Outbound] Call initiated — SID: ${call.sid}, to: ${toNumber}, purpose: ${purpose}`
-    );
+     console.log(
+      `[Outbound] Call initiated — SID: ${call.sid}, to: ${toNumber}, session: ${sessionId}`
+     );
 
     return {
       success: true,
       callSid: call.sid,
+      sessionId,
       toNumber,
       fromNumber: config.twilio.phoneNumber,
-      purpose,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[Outbound] Failed to initiate call: ${message}`);
     return {
       success: false,
+      sessionId,
       toNumber,
       fromNumber: config.twilio.phoneNumber,
-      purpose,
       error: message,
     };
   }

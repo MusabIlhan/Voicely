@@ -1,33 +1,18 @@
 #!/usr/bin/env node
 /**
- * Voisli MCP Server — exposes Voisli voice and meeting capabilities
- * as tools for Claude, and any other MCP-compatible AI agent.
+ * Voisli MCP Server CLI entrypoint.
  *
- * Communicates over stdio (standard for MCP servers invoked by
- * Claude Desktop, Claude Code, etc.).
+ * This launches the stdio transport used by local MCP clients such as
+ * Claude Desktop and Claude Code. The HTTP transport is mounted by the
+ * voice backend at `/mcp`.
  */
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerTools } from "./tools.js";
-import { registerResources } from "./resources.js";
-import { callBridgeAPI } from "./bridge.js";
-
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
-const pkg = require("../../package.json") as { version: string };
-
-const server = new McpServer({
-  name: "voisli",
-  version: pkg.version,
-});
-
-// Register all tools and resources
-registerTools(server, callBridgeAPI);
-registerResources(server, callBridgeAPI);
+import { createVoisliMcpServer } from "./server.js";
 
 // Connect via stdio transport
 async function main() {
+  const server = createVoisliMcpServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
