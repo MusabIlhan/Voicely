@@ -1,5 +1,6 @@
 import type { CallSession } from "../shared/types";
 import { CallOrchestrator, type CallOrchestratorOptions } from "./callOrchestrator";
+import { emitServerEvent } from "./events";
 import type WebSocket from "ws";
 
 class CallManager {
@@ -20,6 +21,13 @@ class CallManager {
       `[CallManager] New ${session.direction} call registered: ${session.id} (active: ${this.activeCalls.size})`
     );
 
+    emitServerEvent("call_started", {
+      callId: session.id,
+      direction: session.direction,
+      purpose: session.purpose,
+      status: session.status,
+    });
+
     orchestrator.on("ended", (endedSession: CallSession) => {
       this.activeCalls.delete(endedSession.id);
       this.recentCalls.unshift(endedSession);
@@ -27,6 +35,15 @@ class CallManager {
         this.recentCalls.pop();
       }
       console.log(`[CallManager] Call ended: ${endedSession.id} (active: ${this.activeCalls.size})`);
+
+      emitServerEvent("call_ended", {
+        callId: endedSession.id,
+        direction: endedSession.direction,
+        purpose: endedSession.purpose,
+        duration: endedSession.endedAt && endedSession.startedAt
+          ? new Date(endedSession.endedAt).getTime() - new Date(endedSession.startedAt).getTime()
+          : undefined,
+      });
     });
 
     return orchestrator;

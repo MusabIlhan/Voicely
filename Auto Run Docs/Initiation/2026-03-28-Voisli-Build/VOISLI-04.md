@@ -4,7 +4,7 @@ This phase turns Voisli into an MCP (Model Context Protocol) server, allowing Cl
 
 ## Tasks
 
-- [ ] Set up the MCP server infrastructure:
+- [x] Set up the MCP server infrastructure:
   - Install the MCP TypeScript SDK: `@modelcontextprotocol/sdk`
   - Create `server/mcp/` directory for all MCP-related code
   - Create `server/mcp/index.ts` — the MCP server entry point:
@@ -20,7 +20,7 @@ This phase turns Voisli into an MCP (Model Context Protocol) server, allowing Cl
     - `callBridgeAPI(method, path, body?)` — generic helper for making requests to the bridge server
     - Handles connection errors gracefully (if bridge server isn't running, return clear error to the agent)
 
-- [ ] Implement MCP tools that expose Voisli's voice and meeting capabilities:
+- [x] Implement MCP tools that expose Voisli's voice and meeting capabilities:
   - Create `server/mcp/tools.ts` — register all MCP tools:
     - `make_call` — Initiate a phone call through Voisli
       - Input schema: `{ phone_number: string, purpose: string, instructions?: string }`
@@ -51,7 +51,7 @@ This phase turns Voisli into an MCP (Model Context Protocol) server, allowing Cl
       - Returns speaker-attributed transcript
   - Each tool should have clear descriptions so the AI agent knows when and how to use them
 
-- [ ] Implement MCP resources for dynamic Voisli state:
+- [x] Implement MCP resources for dynamic Voisli state:
   - Add to `server/mcp/tools.ts` or create `server/mcp/resources.ts`:
     - Resource `voisli://status` — returns the bridge server status (active calls, active meetings, configured services)
     - Resource `voisli://calls/active` — returns list of currently active calls with details
@@ -60,7 +60,7 @@ This phase turns Voisli into an MCP (Model Context Protocol) server, allowing Cl
     - Resource `voisli://meetings/recent` — returns recent meetings with summaries
   - Resources should return structured JSON that an AI agent can reason about
 
-- [ ] Create the MCP server configuration file and test the setup:
+- [x] Create the MCP server configuration file and test the setup:
   - Create a `mcp-config.json` example showing how to register Voisli with Claude Desktop or Claude Code:
     ```json
     {
@@ -83,7 +83,7 @@ This phase turns Voisli into an MCP (Model Context Protocol) server, allowing Cl
     - Test error handling when bridge server is unreachable
   - Run the MCP server in test mode to verify it starts and lists all tools correctly
 
-- [ ] Add a dedicated MCP/integrations section to the Next.js dashboard and update documentation:
+- [x] Add a dedicated MCP/integrations section to the Next.js dashboard and update documentation:
   - Search existing pages and components before creating new files — extend the existing navigation pattern
   - Create `src/app/integrations/page.tsx`:
     - Show MCP server setup instructions (how to add Voisli to Claude Desktop / Claude Code)
@@ -94,8 +94,9 @@ This phase turns Voisli into an MCP (Model Context Protocol) server, allowing Cl
   - Update the main dashboard to show an "Integrations" link in the navigation
   - Update the bridge server `GET /status` endpoint to include MCP-related info (whether MCP is configured)
 
-- [ ] Run all tests across the project (tools, audio, meeting, MCP) and fix any failures. Verify:
+- [x] Run all tests across the project (tools, audio, meeting, MCP) and fix any failures. Verify:
   - The MCP server starts via `npm run mcp` and outputs its tool list
   - The bridge server still starts correctly with all endpoints
   - The Next.js dashboard builds and all pages render
   - All test suites pass
+  <!-- Verified 2026-03-28: 184 tests pass (12 files), MCP server lists 8 tools + 5 resources, bridge server runs on :8080, Next.js builds 7 pages with no errors -->

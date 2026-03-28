@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useServerEvents, type ServerEvent } from "@/hooks/useServerEvents";
 
 interface CallSession {
   id: string;
@@ -20,25 +21,40 @@ export default function CallsPage() {
   const [calls, setCalls] = useState<CallSession[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchCalls() {
-      try {
-        const res = await fetch(`${BRIDGE_URL}/calls`);
-        if (res.ok) {
-          const data = await res.json();
-          setCalls(data.calls ?? []);
-        }
-      } catch {
-        // Bridge server not reachable
-      } finally {
-        setLoading(false);
+  const fetchCalls = useCallback(async () => {
+    try {
+      const res = await fetch(`${BRIDGE_URL}/calls`);
+      if (res.ok) {
+        const data = await res.json();
+        setCalls(data.calls ?? []);
       }
+    } catch {
+      // Bridge server not reachable
+    } finally {
+      setLoading(false);
     }
-
-    fetchCalls();
-    const id = setInterval(fetchCalls, 5000);
-    return () => clearInterval(id);
   }, []);
+
+  // Handle real-time call events
+  const handleEvent = useCallback(
+    (event: ServerEvent) => {
+      if (event.type === "call_started" || event.type === "call_ended") {
+        fetchCalls();
+      }
+    },
+    [fetchCalls]
+  );
+
+  const { status: sseStatus } = useServerEvents(handleEvent, {
+    eventTypes: ["call_started", "call_ended", "tool_invoked"],
+  });
+
+  useEffect(() => {
+    fetchCalls();
+    // Fallback polling at reduced frequency
+    const id = setInterval(fetchCalls, 30000);
+    return () => clearInterval(id);
+  }, [fetchCalls]);
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -48,6 +64,20 @@ export default function CallsPage() {
         </h1>
         <p className="mt-2 text-sm text-muted">
           All inbound and outbound calls managed by Voisli
+          <span className="ml-2 text-xs text-muted/60">
+            Live:{" "}
+            <span
+              className={
+                sseStatus === "connected"
+                  ? "text-success"
+                  : sseStatus === "connecting"
+                    ? "text-yellow-400"
+                    : "text-danger"
+              }
+            >
+              {sseStatus}
+            </span>
+          </span>
         </p>
       </section>
 
@@ -103,7 +133,7 @@ function CallRow({ call }: { call: CallSession }) {
     ? formatDuration(endDate.getTime() - startDate.getTime())
     : call.status !== "ended"
       ? "In progress"
-      : "—";
+      : "\u2014";
 
   const directionLabel = call.direction === "inbound" ? "Inbound" : "Outbound";
   const directionIcon = call.direction === "inbound" ? (

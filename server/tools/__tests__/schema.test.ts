@@ -6,13 +6,14 @@ import {
   makeOutboundCall,
   searchBusiness,
   endCall,
+  joinMeeting,
 } from "../schema";
 
 const VALID_PARAM_TYPES = ["string", "number", "integer", "boolean", "object", "array"];
 
 describe("allToolSchemas", () => {
-  it("should contain exactly 5 tool schemas", () => {
-    expect(allToolSchemas).toHaveLength(5);
+  it("should contain exactly 6 tool schemas", () => {
+    expect(allToolSchemas).toHaveLength(6);
   });
 
   it("should include all expected tool names", () => {
@@ -22,6 +23,7 @@ describe("allToolSchemas", () => {
     expect(names).toContain("make_outbound_call");
     expect(names).toContain("search_business");
     expect(names).toContain("end_call");
+    expect(names).toContain("join_meeting");
   });
 
   it("every schema should have name, description, and parameters", () => {
@@ -159,5 +161,27 @@ describe("endCall schema", () => {
   it("has exactly 1 parameter", () => {
     const props = (endCall.parameters as Record<string, unknown>).properties as Record<string, unknown>;
     expect(Object.keys(props)).toHaveLength(1);
+  });
+});
+
+describe("joinMeeting schema", () => {
+  it("requires meeting_url", () => {
+    const params = joinMeeting.parameters as Record<string, unknown>;
+    const required = params.required as string[];
+    expect(required).toEqual(["meeting_url"]);
+  });
+
+  it("has optional bot_name param", () => {
+    const params = joinMeeting.parameters as Record<string, unknown>;
+    const props = params.properties as Record<string, Record<string, unknown>>;
+    const required = params.required as string[];
+
+    expect(props).toHaveProperty("bot_name");
+    expect(required).not.toContain("bot_name");
+  });
+
+  it("has exactly 2 parameters", () => {
+    const props = (joinMeeting.parameters as Record<string, unknown>).properties as Record<string, unknown>;
+    expect(Object.keys(props)).toHaveLength(2);
   });
 });

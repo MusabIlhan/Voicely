@@ -4,7 +4,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
 
 ## Tasks
 
-- [ ] Set up Recall.ai integration and bot lifecycle management:
+- [x] Set up Recall.ai integration and bot lifecycle management:
   - Install the Recall.ai SDK or set up HTTP client for their REST API (check if `@recallai/sdk` npm package exists, otherwise use fetch/axios with their REST endpoints)
   - Add environment variables to `.env.example`:
     ```
@@ -28,7 +28,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
     - `TranscriptEntry` — speaker, text, timestamp
     - `MeetingParticipant` — name, speakerId
 
-- [ ] Build the real-time meeting transcription and context management pipeline:
+- [x] Build the real-time meeting transcription and context management pipeline:
   - Create `server/meeting/contextManager.ts`:
     - Maintains a rolling context window of the meeting conversation (last N minutes or last M transcript entries)
     - `addTranscriptEntry(entry: TranscriptEntry)` — adds a new transcript line with speaker attribution
@@ -42,7 +42,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
     - `POST /webhooks/recall/audio` — receives audio data if using audio-based processing
     - Mount these routes in `server/index.ts`
 
-- [ ] Implement the meeting AI brain — Gemini integration for meeting Q&A:
+- [x] Implement the meeting AI brain — Gemini integration for meeting Q&A:
   - Create `server/meeting/meetingAI.ts`:
     - Creates a Gemini session (can use standard Gemini API or Live API depending on Recall.ai's audio capabilities) specifically for meeting context
     - System prompt for meeting assistant mode (add to `server/gemini/prompts.ts`):
@@ -65,7 +65,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
     - Implements a cooldown to prevent the bot from responding too frequently
     - Stores meeting session data for post-meeting summary
 
-- [ ] Create API endpoints for meeting bot management and update the dashboard:
+- [x] Create API endpoints for meeting bot management and update the dashboard:
   - Add to `server/index.ts`:
     - `POST /meetings/join` — body: `{ meetingUrl, botName? }` — creates a Recall.ai bot and sends it to the meeting
     - `GET /meetings` — lists all meeting sessions (active and past)
@@ -77,7 +77,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
     - `join_meeting` — params: meeting_url (string), bot_name (string, optional). Description: "Send the Voisli AI assistant to join a Google Meet meeting"
   - Wire the new tool into `server/tools/executor.ts`
 
-- [ ] Build the meeting dashboard UI in Next.js:
+- [x] Build the meeting dashboard UI in Next.js:
   - Search existing components and pages before creating new files — extend existing navigation and patterns
   - Create `src/app/meetings/page.tsx` — meetings overview page:
     - "Join a Meeting" form with meeting URL input and submit button (calls `POST /meetings/join`)
@@ -91,7 +91,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
   - Update the main dashboard (`src/app/page.tsx`) to show active meetings count alongside active calls
   - Update navigation to include the Meetings page
 
-- [ ] Write tests for the meeting system:
+- [x] Write tests for the meeting system:
   - Create `server/meeting/__tests__/contextManager.test.ts`:
     - Test adding transcript entries and retrieving formatted context
     - Test the rolling window (old entries get trimmed)
@@ -101,5 +101,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
     - Test the question detection → AI response → audio output pipeline with mocked Recall.ai and Gemini clients
     - Test cooldown logic
     - Test meeting lifecycle (join → active → leave)
+  <!-- Completed: contextManager.test.ts already existed (16 tests). Created meetingOrchestrator.test.ts with 25 tests covering lifecycle, transcript handling, AI response pipeline, cooldown, and concurrency. All 141 tests pass across 10 test files. -->
 
-- [ ] Run all tests (existing and new) and fix any failures. Verify the bridge server starts with the new meeting endpoints registered. Verify the Next.js dashboard builds and the meetings pages render correctly. Test the meeting join endpoint with a curl command to verify it accepts the right payload format.
+- [x] Run all tests (existing and new) and fix any failures. Verify the bridge server starts with the new meeting endpoints registered. Verify the Next.js dashboard builds and the meetings pages render correctly. Test the meeting join endpoint with a curl command to verify it accepts the right payload format.
+  <!-- Completed: All 141 tests pass across 10 test files (vitest). Next.js build succeeds with all routes (/, /calls, /meetings, /meetings/[botId]). Bridge server starts on port 8080 with all meeting endpoints registered. Curl verification: POST /meetings/join accepts {meetingUrl} payload correctly (returns Recall.ai auth error as expected without real API key); POST with empty body returns 400 with proper validation message; GET /meetings returns empty sessions list. -->

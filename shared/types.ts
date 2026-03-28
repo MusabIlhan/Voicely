@@ -89,6 +89,11 @@ export interface BridgeServerStatus {
     gemini: boolean;
     googleCalendar: boolean;
   };
+  mcp: {
+    configured: boolean;
+    tools: number;
+    resources: number;
+  };
 }
 
 // --- Gemini Configuration ---

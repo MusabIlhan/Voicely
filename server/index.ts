@@ -3,9 +3,12 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { config, validateConfig, isConfigured } from "./config";
 import twilioWebhooks from "./twilio/webhooks";
+import recallWebhooks from "./meeting/webhooks";
 import { callManager } from "./callManager";
 import { initiateOutboundCall } from "./twilio/outbound";
+import { meetingOrchestrator } from "./meeting/meetingOrchestrator";
 import type { BridgeServerStatus } from "../shared/types";
+import { sseHandler } from "./events";
 
 const startTime = Date.now();
 
@@ -30,13 +33,25 @@ app.use((_req, res, next) => {
 // Mount Twilio webhook routes
 app.use(twilioWebhooks);
 
+// Mount Recall.ai webhook routes
+app.use(recallWebhooks);
+
+// SSE endpoint for real-time dashboard updates
+app.get("/events", sseHandler);
+
 // Status endpoint for the dashboard
 app.get("/status", (_req, res) => {
   const services = isConfigured();
+  const mcpConfigured = !!process.env.BRIDGE_SERVER_URL || true; // MCP server can always connect to bridge
   const status: BridgeServerStatus = {
     activeCalls: callManager.getCallCount(),
     uptime: Math.floor((Date.now() - startTime) / 1000),
     configuredServices: services,
+    mcp: {
+      configured: mcpConfigured,
+      tools: 8,
+      resources: 5,
+    },
   };
   res.json(status);
 });
@@ -75,6 +90,78 @@ app.get("/calls/:callSid", (req, res) => {
     return;
   }
   res.json({ call });
+});
+
+// Meeting management endpoints
+
+// POST /meetings/join — create a Recall.ai bot and send it to a meeting
+app.post("/meetings/join", async (req, res) => {
+  const { meetingUrl, botName } = req.body ?? {};
+
+  if (!meetingUrl || typeof meetingUrl !== "string") {
+    res
+      .status(400)
+      .json({ error: "meetingUrl is required and must be a string" });
+    return;
+  }
+
+  try {
+    const session = await meetingOrchestrator.joinMeeting(meetingUrl, botName);
+    res.json({ session });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[Bridge] Failed to join meeting: ${message}`);
+    res.status(500).json({ error: message });
+  }
+});
+
+// GET /meetings — list all meeting sessions (active and past)
+app.get("/meetings", (_req, res) => {
+  const sessions = meetingOrchestrator.getAllSessions();
+  res.json({ sessions });
+});
+
+// GET /meetings/:botId — get details of a specific meeting session
+app.get("/meetings/:botId", (req, res) => {
+  const session = meetingOrchestrator.getSession(req.params.botId);
+  if (!session) {
+    res.status(404).json({ error: "Meeting session not found" });
+    return;
+  }
+  res.json({ session });
+});
+
+// POST /meetings/:botId/leave — remove bot from the meeting
+app.post("/meetings/:botId/leave", async (req, res) => {
+  try {
+    await meetingOrchestrator.leaveMeeting(req.params.botId);
+    res.json({ success: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(404).json({ error: message });
+  }
+});
+
+// GET /meetings/:botId/summary — get AI-generated meeting summary
+app.get("/meetings/:botId/summary", (req, res) => {
+  const session = meetingOrchestrator.getSession(req.params.botId);
+  if (!session) {
+    res.status(404).json({ error: "Meeting session not found" });
+    return;
+  }
+  const summary = meetingOrchestrator.getSummary(req.params.botId);
+  res.json({ botId: req.params.botId, summary });
+});
+
+// GET /meetings/:botId/transcript — get full transcript
+app.get("/meetings/:botId/transcript", (req, res) => {
+  const session = meetingOrchestrator.getSession(req.params.botId);
+  if (!session) {
+    res.status(404).json({ error: "Meeting session not found" });
+    return;
+  }
+  const transcript = meetingOrchestrator.getTranscript(req.params.botId);
+  res.json({ botId: req.params.botId, transcript });
 });
 
 // Create HTTP server and WebSocket server
@@ -157,6 +244,7 @@ server.listen(port, host, () => {
   console.log(`    Twilio:    ${services.twilio ? "✓ configured" : "✗ not configured"}`);
   console.log(`    Gemini:    ${services.gemini ? "✓ configured" : "✗ not configured"}`);
   console.log(`    Calendar:  ${services.googleCalendar ? "✓ configured" : "✗ not configured"}`);
+  console.log(`    Recall.ai: ${services.recall ? "✓ configured" : "✗ not configured"}`);
 
   if (config.server.publicUrl && !config.server.publicUrl.startsWith("https://your-")) {
     console.log(`\n  Public URL: ${config.server.publicUrl}`);

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import StatusCard from "@/components/StatusCard";
 import ActiveCalls from "@/components/ActiveCalls";
+import { useServerEvents, type ServerEvent } from "@/hooks/useServerEvents";
 
 interface BridgeStatus {
   activeCalls: number;
@@ -25,6 +26,13 @@ interface RecentCall {
   endedAt?: string;
 }
 
+interface ActivityEntry {
+  id: string;
+  type: string;
+  message: string;
+  timestamp: string;
+}
+
 const BRIDGE_URL =
   process.env.NEXT_PUBLIC_BRIDGE_SERVER_URL || "http://localhost:8080";
 
@@ -32,11 +40,25 @@ export default function Home() {
   const [status, setStatus] = useState<BridgeStatus | null>(null);
   const [online, setOnline] = useState(false);
   const [recentCalls, setRecentCalls] = useState<RecentCall[]>([]);
+  const [activeMeetings, setActiveMeetings] = useState(0);
   const [callLoading, setCallLoading] = useState(false);
   const [callResult, setCallResult] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
+  const [activityFeed, setActivityFeed] = useState<ActivityEntry[]>([]);
+
+  const addActivity = useCallback((type: string, message: string, timestamp: string) => {
+    setActivityFeed((prev) => {
+      const entry: ActivityEntry = {
+        id: crypto.randomUUID(),
+        type,
+        message,
+        timestamp,
+      };
+      return [entry, ...prev].slice(0, 20);
+    });
+  }, []);
 
   const fetchCalls = useCallback(async () => {
     try {
@@ -49,6 +71,59 @@ export default function Home() {
       // Bridge not available
     }
   }, []);
+
+  // Handle real-time events
+  const handleEvent = useCallback(
+    (event: ServerEvent) => {
+      switch (event.type) {
+        case "call_started": {
+          const dir = (event.data.direction as string) ?? "inbound";
+          addActivity(event.type, `${dir} call started`, event.timestamp);
+          fetchCalls();
+          setStatus((prev) =>
+            prev ? { ...prev, activeCalls: prev.activeCalls + 1 } : prev
+          );
+          break;
+        }
+        case "call_ended": {
+          const dir = (event.data.direction as string) ?? "";
+          addActivity(event.type, `${dir} call ended`, event.timestamp);
+          fetchCalls();
+          setStatus((prev) =>
+            prev
+              ? { ...prev, activeCalls: Math.max(0, prev.activeCalls - 1) }
+              : prev
+          );
+          break;
+        }
+        case "tool_invoked": {
+          const tool = (event.data.tool as string) ?? "unknown";
+          addActivity(event.type, `Tool invoked: ${tool}`, event.timestamp);
+          break;
+        }
+        case "meeting_joined": {
+          const url = (event.data.meetingUrl as string) ?? "";
+          addActivity(event.type, `Bot joined meeting: ${url.slice(0, 40)}`, event.timestamp);
+          setActiveMeetings((prev) => prev + 1);
+          break;
+        }
+        case "transcript_update": {
+          const speaker = (event.data.speaker as string) ?? "";
+          const text = (event.data.text as string) ?? "";
+          addActivity(event.type, `${speaker}: ${text.slice(0, 60)}`, event.timestamp);
+          break;
+        }
+        case "bot_spoke": {
+          const answer = (event.data.answer as string) ?? "";
+          addActivity(event.type, `Bot spoke: ${answer.slice(0, 60)}`, event.timestamp);
+          break;
+        }
+      }
+    },
+    [addActivity, fetchCalls]
+  );
+
+  const { status: sseStatus } = useServerEvents(handleEvent);
 
   useEffect(() => {
     async function fetchStatus() {
@@ -66,12 +141,35 @@ export default function Home() {
       }
     }
 
+    async function fetchMeetings() {
+      try {
+        const res = await fetch(`${BRIDGE_URL}/meetings`);
+        if (res.ok) {
+          const data = await res.json();
+          const sessions = data.sessions ?? [];
+          setActiveMeetings(
+            sessions.filter(
+              (s: { status: string }) =>
+                s.status === "creating" ||
+                s.status === "joining" ||
+                s.status === "in_call"
+            ).length
+          );
+        }
+      } catch {
+        // Bridge not available
+      }
+    }
+
     fetchStatus();
     fetchCalls();
+    fetchMeetings();
+    // Polling as fallback — reduced frequency since SSE provides real-time updates
     const id = setInterval(() => {
       fetchStatus();
       fetchCalls();
-    }, 5000);
+      fetchMeetings();
+    }, 30000);
     return () => clearInterval(id);
   }, [fetchCalls]);
 
@@ -117,6 +215,21 @@ export default function Home() {
           Voisli
         </h1>
         <p className="mt-2 text-lg text-muted">Your AI Voice Assistant</p>
+        {/* SSE connection indicator */}
+        <p className="mt-1 text-xs text-muted/60">
+          Live updates:{" "}
+          <span
+            className={
+              sseStatus === "connected"
+                ? "text-success"
+                : sseStatus === "connecting"
+                  ? "text-yellow-400"
+                  : "text-danger"
+            }
+          >
+            {sseStatus}
+          </span>
+        </p>
       </section>
 
       {/* Status Cards */}
@@ -145,6 +258,40 @@ export default function Home() {
         <ActiveCalls calls={[]} />
       </section>
 
+      {/* Active Meetings */}
+      <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/20">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-5 w-5 text-accent-light"
+              >
+                <path d="M4.5 4.5a3 3 0 00-3 3v9a3 3 0 003 3h8.25a3 3 0 003-3v-9a3 3 0 00-3-3H4.5zM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                Active Meetings
+              </h2>
+              <p className="text-sm text-muted">
+                {activeMeetings === 0
+                  ? "No bots in meetings"
+                  : `${activeMeetings} bot${activeMeetings !== 1 ? "s" : ""} in meetings`}
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/meetings"
+            className="text-sm text-accent-light hover:text-accent transition-colors"
+          >
+            View all
+          </Link>
+        </div>
+      </section>
+
       {/* Make a Test Call */}
       <section className="mb-8 rounded-xl border border-card-border bg-card p-6">
         <div className="flex items-center justify-between">
@@ -170,6 +317,40 @@ export default function Home() {
           >
             {callResult.message}
           </p>
+        )}
+      </section>
+
+      {/* Live Activity Feed */}
+      <section className="mb-8 rounded-xl border border-card-border bg-card">
+        <div className="flex items-center justify-between border-b border-card-border px-5 py-4">
+          <h2 className="text-lg font-semibold text-foreground">
+            Live Activity
+          </h2>
+          <span className="text-xs text-muted">Real-time events</span>
+        </div>
+        {activityFeed.length === 0 ? (
+          <div className="px-5 py-8 text-center">
+            <p className="text-sm text-muted">No live events yet</p>
+            <p className="mt-1 text-xs text-muted/60">
+              Events will appear here in real-time as calls and meetings happen
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-card-border max-h-64 overflow-y-auto">
+            {activityFeed.map((entry) => (
+              <li key={entry.id} className="flex items-center gap-3 px-5 py-2.5">
+                <EventIcon type={entry.type} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-foreground truncate">
+                    {entry.message}
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs text-muted/60">
+                  {new Date(entry.timestamp).toLocaleTimeString()}
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 
@@ -294,6 +475,28 @@ export default function Home() {
         </ol>
       </section>
     </div>
+  );
+}
+
+function EventIcon({ type }: { type: string }) {
+  const iconMap: Record<string, { bg: string; label: string }> = {
+    call_started: { bg: "bg-success/20 text-success", label: "C" },
+    call_ended: { bg: "bg-muted/20 text-muted", label: "C" },
+    tool_invoked: { bg: "bg-yellow-500/20 text-yellow-400", label: "T" },
+    meeting_joined: { bg: "bg-accent/20 text-accent-light", label: "M" },
+    transcript_update: { bg: "bg-accent/20 text-accent-light", label: "S" },
+    bot_spoke: { bg: "bg-success/20 text-success", label: "B" },
+  };
+  const { bg, label } = iconMap[type] ?? {
+    bg: "bg-muted/20 text-muted",
+    label: "?",
+  };
+  return (
+    <span
+      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${bg}`}
+    >
+      {label}
+    </span>
   );
 }
 

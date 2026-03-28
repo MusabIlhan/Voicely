@@ -7,6 +7,7 @@ import { executeToolCalls } from "./tools/executor";
 import { allToolSchemas } from "./tools/schema";
 import { getSystemPrompt, type CallContext } from "./gemini/prompts";
 import type { CallSession, CallStatus, CallDirection } from "../shared/types";
+import { emitServerEvent } from "./events";
 
 // Minimum audio chunk size (in bytes) to send to Gemini.
 // Gemini Live API works best with chunks of at least ~4000 bytes of PCM 16kHz.
@@ -121,6 +122,14 @@ export class CallOrchestrator extends EventEmitter {
       console.log(
         `[Orchestrator] Tool call(s) received: ${calls.map((fc) => fc.name).join(", ")}`
       );
+
+      for (const fc of calls) {
+        emitServerEvent("tool_invoked", {
+          callId: this.session.id,
+          tool: fc.name,
+          args: fc.args ?? {},
+        });
+      }
 
       executeToolCalls(calls)
         .then((responses) => {

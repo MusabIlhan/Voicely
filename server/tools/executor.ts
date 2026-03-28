@@ -7,6 +7,7 @@ import {
 } from "./handlers/calendar.js";
 import { initiateOutboundCall } from "../twilio/outbound.js";
 import { searchBusiness } from "./handlers/search.js";
+import { meetingOrchestrator } from "../meeting/meetingOrchestrator.js";
 
 /**
  * Handler function signature — takes parsed arguments, returns a result object.
@@ -144,5 +145,27 @@ registerToolHandler("end_call", async (args) => {
     success: true,
     reason: args.reason,
     message: "Call will be ended.",
+  };
+});
+
+registerToolHandler("join_meeting", async (args) => {
+  console.log("[ToolExecutor] join_meeting called with:", args);
+  if (!isConfigured().recall) {
+    return {
+      success: false,
+      error:
+        "Recall.ai is not configured. Set RECALL_API_KEY in your .env file.",
+    };
+  }
+  const session = await meetingOrchestrator.joinMeeting(
+    args.meeting_url as string,
+    args.bot_name as string | undefined
+  );
+  return {
+    success: true,
+    bot_id: session.botId,
+    meeting_url: session.meetingUrl,
+    status: session.status,
+    message: `Voisli assistant is joining the meeting at ${session.meetingUrl}`,
   };
 });

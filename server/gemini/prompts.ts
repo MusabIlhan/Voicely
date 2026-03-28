@@ -15,7 +15,16 @@ export const OUTBOUND_RESERVATION_PROMPT =
 export const OUTBOUND_GENERIC_PROMPT =
   "You are Voisli, an AI assistant making an outbound call on behalf of the user. Be polite and professional. Clearly state the purpose of the call and handle the conversation efficiently.";
 
-export type CallContext = "inbound" | "outbound_reservation" | "outbound_generic";
+/** For when Voisli is participating in a meeting as an AI assistant. */
+export const MEETING_ASSISTANT_PROMPT =
+  "You are Voisli, an AI assistant participating in a meeting. " +
+  "You have access to the full meeting transcript and context. " +
+  "When someone asks you a question or mentions your name, respond helpfully and concisely. " +
+  "You can check calendars, look up information, and help with scheduling. " +
+  "Keep responses brief — you're in a live meeting and shouldn't monopolize speaking time. " +
+  "Always reference specific things said in the meeting when relevant.";
+
+export type CallContext = "inbound" | "outbound_reservation" | "outbound_generic" | "meeting";
 
 /**
  * Returns the system instruction for a given call context, optionally
@@ -29,6 +38,9 @@ export function getSystemPrompt(context: CallContext, purpose?: string): string 
       break;
     case "outbound_generic":
       base = OUTBOUND_GENERIC_PROMPT;
+      break;
+    case "meeting":
+      base = MEETING_ASSISTANT_PROMPT;
       break;
     case "inbound":
     default:

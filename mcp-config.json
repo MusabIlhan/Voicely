@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "voisli": {
+      "command": "npx",
+      "args": ["tsx", "server/mcp/index.ts"],
+      "cwd": "/path/to/voisli",
+      "env": {
+        "BRIDGE_SERVER_URL": "http://localhost:8080"
+      }
+    }
+  }
+}
