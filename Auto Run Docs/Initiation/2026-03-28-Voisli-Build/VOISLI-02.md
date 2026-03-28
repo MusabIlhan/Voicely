@@ -72,7 +72,7 @@ This phase adds intelligence to the voice assistant. Gemini 3.1 Flash Live suppo
     - `GET /calls/:callSid` — get details of a specific call
   - Wire the search handler into `server/tools/executor.ts`
 
-- [ ] Update the Next.js dashboard to display call history and outbound call controls:
+- [x] Update the Next.js dashboard to display call history and outbound call controls:
   - Search existing components in `src/components/` and pages in `src/app/` before creating new ones — reuse and extend existing code
   - Create `src/app/calls/page.tsx` — call history page:
     - Lists all calls (from `GET /calls` endpoint) with direction (inbound/outbound), status, duration, and purpose
@@ -83,7 +83,7 @@ This phase adds intelligence to the voice assistant. Gemini 3.1 Flash Live suppo
     - Show recent call activity feed
   - Add navigation between dashboard and calls page (update layout or add a nav component)
 
-- [ ] Write tests for the tool calling system and audio pipeline:
+- [x] Write tests for the tool calling system and audio pipeline:
   - Create `server/tools/__tests__/executor.test.ts`:
     - Test that each tool name routes to the correct handler
     - Test error handling when a handler throws
@@ -95,5 +95,6 @@ This phase adds intelligence to the voice assistant. Gemini 3.1 Flash Live suppo
     - Round-trip mulaw encoding/decoding
     - Resampling buffer size validation
     - Full pipeline twilioToGemini → geminiToTwilio round-trip
+  - **Note:** Audio converter tests already existed at `server/audio/converter.test.ts` (13 tests) from Phase 1 — skipped creating `__tests__` duplicate. Created executor tests (15 tests) and schema tests (18 tests). All 66 tests pass.
 
 - [ ] Run all tests and fix any failures. Verify the bridge server starts with the new tool schemas registered. Verify the Next.js dashboard builds and the new calls page renders correctly. Test the outbound call endpoint with a curl command to ensure it returns proper responses (even if Twilio credentials aren't configured, it should return a clear error).
