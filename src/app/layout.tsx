@@ -75,6 +75,12 @@ export default function RootLayout({
               >
                 Integrations
               </Link>
+              <Link
+                href="/demo"
+                className="text-sm font-medium text-accent-light hover:text-accent transition-colors"
+              >
+                Demo
+              </Link>
             </div>
           </div>
         </nav>

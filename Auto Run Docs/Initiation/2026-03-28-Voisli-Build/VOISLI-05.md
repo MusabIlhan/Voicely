@@ -39,7 +39,7 @@ This is the final phase — polish the UI, add real-time updates so the dashboar
     - Loading states and empty states that look intentional, not broken
     - Ensure all pages work well at 1920x1080 (common projector resolution)
 
-- [ ] Build a demo control panel for the hackathon presentation:
+- [x] Build a demo control panel for the hackathon presentation:
   - Create `src/app/demo/page.tsx` — a special page for running the demo:
     - **Demo Flow 1: Restaurant Reservation**
       - "Start Demo Call" button that shows the Twilio number to call (or initiates an outbound call to a test number)
