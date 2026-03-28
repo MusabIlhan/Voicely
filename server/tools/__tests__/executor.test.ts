@@ -7,6 +7,7 @@ vi.mock("../../config.js", () => ({
     twilio: false,
     gemini: false,
     googleCalendar: false,
+    recall: false,
   })),
 }));
 
@@ -44,6 +45,7 @@ beforeEach(() => {
     twilio: false,
     gemini: false,
     googleCalendar: false,
+    recall: false,
   });
 });
 
@@ -63,7 +65,7 @@ describe("executeToolCalls — routing", () => {
   });
 
   it("routes check_calendar_availability to real handler when configured", async () => {
-    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: true });
+    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: true, recall: false });
     mockedCheckAvailability.mockResolvedValue({
       available: false,
       date: "2026-04-01",
@@ -103,7 +105,7 @@ describe("executeToolCalls — routing", () => {
   });
 
   it("routes create_calendar_event to real handler when configured", async () => {
-    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: true });
+    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: true, recall: false });
     mockedCreateEvent.mockResolvedValue({
       success: true,
       event_id: "evt_real_123",
@@ -206,7 +208,7 @@ describe("executeToolCalls — unknown tool", () => {
 
 describe("executeToolCalls — error handling", () => {
   it("catches handler errors and returns them in the response", async () => {
-    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: true });
+    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: true, recall: false });
     mockedCheckAvailability.mockRejectedValue(new Error("Google API rate limit exceeded"));
 
     const calls: FunctionCall[] = [
@@ -221,7 +223,7 @@ describe("executeToolCalls — error handling", () => {
   });
 
   it("handles non-Error thrown values", async () => {
-    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: true });
+    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: true, recall: false });
     mockedCheckAvailability.mockRejectedValue("raw string error");
 
     const calls: FunctionCall[] = [
@@ -263,7 +265,7 @@ describe("executeToolCalls — parallel execution", () => {
   });
 
   it("returns individual errors without failing the batch", async () => {
-    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: true });
+    mockedIsConfigured.mockReturnValue({ twilio: false, gemini: false, googleCalendar: true, recall: false });
     mockedCheckAvailability.mockRejectedValue(new Error("API down"));
 
     const calls: FunctionCall[] = [

@@ -55,6 +55,7 @@ describe("initiateOutboundCall", () => {
       twilio: false,
       gemini: true,
       googleCalendar: false,
+      recall: false,
     });
 
     const result = await initiateOutboundCall("+15559998888", "Test call");
@@ -70,6 +71,7 @@ describe("initiateOutboundCall", () => {
       twilio: true,
       gemini: true,
       googleCalendar: false,
+      recall: false,
     });
 
     // Override publicUrl to be a placeholder
@@ -90,6 +92,7 @@ describe("initiateOutboundCall", () => {
       twilio: true,
       gemini: true,
       googleCalendar: false,
+      recall: false,
     });
 
     const mockCreate = await getMockCreate();
@@ -114,6 +117,7 @@ describe("initiateOutboundCall", () => {
       twilio: true,
       gemini: true,
       googleCalendar: false,
+      recall: false,
     });
 
     const mockCreate = await getMockCreate();

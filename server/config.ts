@@ -16,6 +16,10 @@ export interface ServerConfig {
     privateKey: string;
     calendarId: string;
   };
+  recall: {
+    apiKey: string;
+    apiBaseUrl: string;
+  };
   server: {
     port: number;
     host: string;
@@ -28,6 +32,7 @@ export interface ServiceStatus {
   twilio: boolean;
   gemini: boolean;
   googleCalendar: boolean;
+  recall: boolean;
 }
 
 function getEnv(key: string, fallback?: string): string {
@@ -58,6 +63,13 @@ export const config: ServerConfig = {
     privateKey: getEnv("GOOGLE_PRIVATE_KEY"),
     calendarId: getEnv("GOOGLE_CALENDAR_ID", "primary"),
   },
+  recall: {
+    apiKey: getEnv("RECALL_API_KEY"),
+    apiBaseUrl: getEnv(
+      "RECALL_API_BASE_URL",
+      "https://us-west-2.recall.ai/api/v1"
+    ),
+  },
   server: {
     port: parseInt(getEnv("BRIDGE_SERVER_PORT", "8080"), 10),
     host: getEnv("BRIDGE_SERVER_HOST", "localhost"),
@@ -79,6 +91,7 @@ export function isConfigured(): ServiceStatus {
     googleCalendar:
       !isPlaceholder(config.googleCalendar.serviceAccountEmail) &&
       !isPlaceholder(config.googleCalendar.privateKey),
+    recall: !isPlaceholder(config.recall.apiKey),
   };
 }
 
@@ -98,6 +111,9 @@ export function validateConfig(): void {
     missing.push(
       "Google Calendar (GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY)"
     );
+  }
+  if (!status.recall) {
+    missing.push("Recall.ai (RECALL_API_KEY)");
   }
 
   if (missing.length > 0) {

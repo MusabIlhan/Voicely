@@ -4,7 +4,7 @@ This phase builds the meeting assistant feature: Voisli joins a Google Meet call
 
 ## Tasks
 
-- [ ] Set up Recall.ai integration and bot lifecycle management:
+- [x] Set up Recall.ai integration and bot lifecycle management:
   - Install the Recall.ai SDK or set up HTTP client for their REST API (check if `@recallai/sdk` npm package exists, otherwise use fetch/axios with their REST endpoints)
   - Add environment variables to `.env.example`:
     ```
