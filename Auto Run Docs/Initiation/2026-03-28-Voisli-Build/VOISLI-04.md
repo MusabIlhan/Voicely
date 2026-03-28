@@ -60,7 +60,7 @@ This phase turns Voisli into an MCP (Model Context Protocol) server, allowing Cl
     - Resource `voisli://meetings/recent` — returns recent meetings with summaries
   - Resources should return structured JSON that an AI agent can reason about
 
-- [ ] Create the MCP server configuration file and test the setup:
+- [x] Create the MCP server configuration file and test the setup:
   - Create a `mcp-config.json` example showing how to register Voisli with Claude Desktop or Claude Code:
     ```json
     {
