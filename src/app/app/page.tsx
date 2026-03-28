@@ -5,6 +5,8 @@ import Link from "next/link";
 import StatusCard from "@/components/StatusCard";
 import ActiveCalls from "@/components/ActiveCalls";
 import { useServerEvents, type ServerEvent } from "@/hooks/useServerEvents";
+import { useAuth } from "@/hooks/useAuth";
+import { Onboarding } from "@/components/Onboarding";
 
 interface BridgeStatus {
   activeCalls: number;
@@ -53,6 +55,7 @@ const BRIDGE_URL =
   process.env.NEXT_PUBLIC_BRIDGE_SERVER_URL || "http://localhost:8080";
 
 export default function Home() {
+  const { isAuthenticated, loading: authLoading, login } = useAuth();
   const [status, setStatus] = useState<BridgeStatus | null>(null);
   const [online, setOnline] = useState(false);
   const [recentCalls, setRecentCalls] = useState<RecentCall[]>([]);
@@ -237,6 +240,14 @@ export default function Home() {
   const twilioReady = status?.configuredServices.twilio ?? false;
   const geminiReady = status?.configuredServices.gemini ?? false;
   const activeCalls = status?.activeCalls ?? 0;
+
+  if (authLoading) {
+    return <div className="flex min-h-[calc(100vh-73px)] items-center justify-center" />;
+  }
+
+  if (!isAuthenticated) {
+    return <Onboarding onComplete={login} />;
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">

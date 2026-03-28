@@ -22,12 +22,20 @@ export default function HomePage() {
           </div>
           <span className="text-xl font-bold tracking-tight">Voisli</span>
         </div>
-        <Link
-          href="/app"
-          className="text-sm font-medium text-muted hover:text-foreground transition-colors"
-        >
-          Dashboard &rarr;
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/login"
+            className="text-sm font-medium text-muted hover:text-foreground transition-colors"
+          >
+            Log in
+          </Link>
+          <Link
+            href="/signup"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-accent-light hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Sign up
+          </Link>
+        </div>
       </nav>
 
       {/* Hero */}
