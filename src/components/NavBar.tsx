@@ -63,6 +63,24 @@ export function NavBar() {
           >
             Demo
           </Link>
+          <div className="ml-2 flex items-center gap-2 border-l border-card-border/50 pl-4">
+            <Link
+              href="/login"
+              className={`text-sm font-medium transition-colors ${
+                pathname === "/login"
+                  ? "text-foreground"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              Log in
+            </Link>
+            <Link
+              href="/signup"
+              className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white transition-all hover:bg-accent-light hover:scale-105 active:scale-95"
+            >
+              Sign up
+            </Link>
+          </div>
         </div>
       </div>
     </nav>

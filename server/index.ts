@@ -10,6 +10,7 @@ import { meetingOrchestrator } from "./meeting/meetingOrchestrator";
 import type { BridgeServerStatus } from "../shared/types";
 import { sseHandler } from "./events";
 import { runHealthCheck } from "./health";
+import authRoutes from "./auth";
 
 const startTime = Date.now();
 
@@ -30,6 +31,9 @@ app.use((_req, res, next) => {
   }
   next();
 });
+
+// Mount auth routes
+app.use(authRoutes);
 
 // Mount Twilio webhook routes
 app.use(twilioWebhooks);
