@@ -161,7 +161,10 @@ export class MeetingOrchestrator extends EventEmitter {
         if (now() < state.suppressIncomingAudioUntil) {
           return;
         }
-        const audio = Buffer.from(event.data.data.b64_data, "base64");
+        if (!event.data.data.buffer) {
+          return;
+        }
+        const audio = Buffer.from(event.data.data.buffer, "base64");
         state.currentTurnActive = true;
         state.geminiSession.sendAudio(audio);
         break;

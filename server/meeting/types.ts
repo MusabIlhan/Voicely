@@ -86,7 +86,7 @@ export interface RecallAudioMixedRawDataEvent {
   data: {
     bot: RecallRealtimeBotRef;
     data: {
-      b64_data: string;
+      buffer: string;
       mime_type?: string;
     };
   };

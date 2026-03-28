@@ -109,7 +109,7 @@ describe("MeetingOrchestrator", () => {
       data: {
         bot: { id: "bot_123" },
         data: {
-          b64_data: Buffer.from([0x01, 0x02, 0x03]).toString("base64"),
+          buffer: Buffer.from([0x01, 0x02, 0x03]).toString("base64"),
         },
       },
     });

@@ -32,6 +32,10 @@ function summarizeUpgradeRequest(req: IncomingMessage) {
   };
 }
 
+function getUpgradePath(req: IncomingMessage): string {
+  return new URL(req.url ?? "/", "http://localhost").pathname;
+}
+
 // Parse request bodies for Twilio webhooks
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -203,14 +207,41 @@ app.get("/meetings/:botId/transcript", (req, res) => {
 // Create HTTP server and WebSocket server
 const server = createServer(app);
 
-server.on("upgrade", (req) => {
+server.on("upgrade", (req, socket, head) => {
   console.log(`[Upgrade] ${JSON.stringify(summarizeUpgradeRequest(req))}`);
+
+  const pathname = getUpgradePath(req);
+
+  if (pathname === "/media-stream") {
+    wssInbound.handleUpgrade(req, socket, head, (ws) => {
+      wssInbound.emit("headers", [], req);
+      wssInbound.emit("connection", ws, req);
+    });
+    return;
+  }
+
+  if (pathname === "/media-stream-outbound") {
+    wssOutbound.handleUpgrade(req, socket, head, (ws) => {
+      wssOutbound.emit("headers", [], req);
+      wssOutbound.emit("connection", ws, req);
+    });
+    return;
+  }
+
+  if (pathname === "/webhooks/recall/realtime") {
+    wssRecallRealtime.handleUpgrade(req, socket, head, (ws) => {
+      wssRecallRealtime.emit("headers", [], req);
+      wssRecallRealtime.emit("connection", ws, req);
+    });
+    return;
+  }
+
+  socket.destroy();
 });
 
 // Inbound call media stream
 const wssInbound = new WebSocketServer({
-  server,
-  path: "/media-stream",
+  noServer: true,
   perMessageDeflate: false,
 });
 
@@ -225,14 +256,12 @@ wssInbound.on("connection", (ws) => {
 
 // Outbound call media stream
 const wssOutbound = new WebSocketServer({
-  server,
-  path: "/media-stream-outbound",
+  noServer: true,
   perMessageDeflate: false,
 });
 
 const wssRecallRealtime = new WebSocketServer({
-  server,
-  path: "/webhooks/recall/realtime",
+  noServer: true,
   perMessageDeflate: false,
 });
 
